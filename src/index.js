@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import connectDB from "./db/index.js";
 import { app } from './app.js';
 import { Server } from 'socket.io';
+import { Account, Client, Databases } from 'node-appwrite'
 
 dotenv.config({
     path: './env'
@@ -11,7 +12,7 @@ dotenv.config({
 
 connectDB()
     .then(() => {
-        const server = app.listen(process.env.PORT || 8000, () => {
+        const server = app.listen(process.env.PORT || 5000, () => {
             console.log(`server is listening at ${process.env.PORT}`);
         })
         // const io = new Server(server, {

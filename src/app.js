@@ -1,6 +1,11 @@
 import express from "express";
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+// // routes import
+import userRouter from './routes/user.routes.js'
+// import productRouter from './routes/product.routes.js'
+// import reviewRouter from './routes/rating.routes.js'
+// import chatRouter from './routes/chat.routes.js'
 
 const app = express();
 
@@ -18,15 +23,10 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"))
 app.use(cookieParser());
 
-// // routes import
-// import userRouter from './routes/user.routes.js'
-// import productRouter from './routes/product.routes.js'
-// import reviewRouter from './routes/rating.routes.js'
-// import chatRouter from './routes/chat.routes.js'
 
 
 // // routes declarations
-// app.use('/api/v1/users',userRouter)
+app.use('/api/v1/auth',userRouter)
 // app.use('/api/v1/products',productRouter)
 // app.use('/api/v1/reviews',reviewRouter)
 // app.use('/api/v1/chats',chatRouter)
