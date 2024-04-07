@@ -4,10 +4,6 @@ import jwt from 'jsonwebtoken'
 
 const bloodReport = new Schema(
     {
-        name: {
-            type: String,
-            required: true,
-        },
         userId: {
             type: Schema.Types.ObjectId,
             ref: "Individual",
@@ -27,6 +23,14 @@ const bloodReport = new Schema(
         },
         heartRateCount:{
             type: Number
+        },
+        updatedBy:{
+            type: Schema.Types.ObjectId,
+            ref:"Doctor"
+        },
+        lastCamp:{
+            type: Schema.Types.ObjectId,
+            ref:"Event"   
         }
     },
     {

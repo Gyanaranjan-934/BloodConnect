@@ -41,6 +41,11 @@ const organizationSchema = new Schema(
             },
             required: true,
         },
+        events:{
+            type: [Schema.Types.ObjectId],
+            ref: "Event",
+            default:[]
+        },
         typeOfOrganization:{
             type: String,
             enum: ['Healthcare', 'Educational', 'Charity','Other'],

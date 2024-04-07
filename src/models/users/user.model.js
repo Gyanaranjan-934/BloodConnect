@@ -4,17 +4,9 @@ import jwt from "jsonwebtoken";
 
 const indivdualUserSchema = new Schema(
     {
-        username: {
+        bloodGroup: {
             type: String,
-            required: true,
-            unique: true,
-            lowercase: true,
-            trim: true,
-            index: true,
-        },
-        bloodGroup:{
-            type: String,
-            enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+            enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
         },
         email: {
             type: String,
@@ -42,34 +34,29 @@ const indivdualUserSchema = new Schema(
         },
         gender: {
             type: String,
-            enum: ["Male","Female","Others"],
+            enum: ["Male", "Female", "Others"],
         },
-        dateOfBirth:{
-            type: Date,
-            required: true
+        dateOfBirth: {
+            type: String,
         },
-        permanentAddress:{
+        permanentAddress: {
             type: {
-                "house/plotNo": String,
-                district: String,
-                State: String,
-                Country: String,
-                PIN: Number,
+                street: String,
+                city: String,
+                state: String,
+                pincode: Number,
             },
-            required: true,
         },
         presentAddress: {
             type: {
-                "house/plotNo": String,
-                district: String,
-                State: String,
-                Country: String,
-                PIN: Number,
+                street: String,
+                city: String,
+                state: String,
+                pincode: Number,
             },
-            required: true,
         },
-        currentLocation:{
-            type: String
+        currentLocation: {
+            type: [Number],
         },
         phoneNo: {
             type: String,
@@ -84,6 +71,34 @@ const indivdualUserSchema = new Schema(
         },
         refreshToken: {
             type: String,
+        },
+        receivedAlerts: {
+            type: [Schema.Types.ObjectId],
+            ref: "Alert",
+        },
+        bloodReports: {
+            type: [Schema.Types.ObjectId],
+            ref: "BloodReport",
+        },
+        eventsRegistered: {
+            type: [Schema.Types.ObjectId],
+            ref: "Event",
+            default: [],
+        },
+        eventsAttended: {
+            type: [
+                {
+                    eventId: {
+                        type: Schema.Types.ObjectId,
+                        ref: "Event",
+                    },
+                    doctorId: {
+                        type: Schema.Types.ObjectId,
+                        ref: "Event",
+                    },
+                },
+            ],
+            default: [],
         },
     },
     {
@@ -106,7 +121,6 @@ indivdualUserSchema.methods.generateAccessToken = function () {
         {
             _id: this._id,
             email: this.email,
-            username: this.username,
             fullName: this.fullName,
         },
         process.env.ACCESS_TOKEN_SECRET,

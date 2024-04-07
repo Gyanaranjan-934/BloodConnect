@@ -1,9 +1,18 @@
+import { Admin } from "../../models/users/admin.model.js";
+import { Organization } from "../../models/users/organization.model.js";
 import { Individual } from "../../models/users/user.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 
-const generateAccessAndRefreshToken = async (userId) => {
+const generateAccessAndRefreshToken = async (userId,userType) => {
     try {
-        const user = await Individual.findOne({ _id: userId });
+        let user = null
+        if(userType === "individual"){
+            user = await Individual.findOne({ _id: userId });
+        }else if(userType === "organization"){
+            user = await Organization.findOne({ _id: userId });
+        }else {
+            user = await Admin.findOne({ _id: userId });
+        }
 
         const accessToken = user.generateAccessToken();
         

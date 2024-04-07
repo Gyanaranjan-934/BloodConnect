@@ -16,7 +16,7 @@ const eventSchema = new Schema(
             type: [Schema.Types.ObjectId],
             ref: "Doctor"
         },
-        staffsCount: {
+        staffCount: {
             type: Number,
             required: true,
         },
@@ -27,6 +27,28 @@ const eventSchema = new Schema(
         maxCapacity:{
             type: Number,
             required: true
+        },
+        isPaid:{
+            type: Boolean,
+            default: false
+        },
+        dateOfEvent:{
+            type: Date,
+            required: true
+        },
+        timeOfEvent:{
+            type: String,
+            required: true
+        },
+        donorsRegisterd:{
+            type: [Schema.Types.ObjectId],
+            ref:"Individual",
+            default: []
+        },
+        donorsAttended:{
+            type: [Schema.Types.ObjectId],
+            ref:"Individual",
+            default: []
         }
     },
     {

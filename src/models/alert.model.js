@@ -11,12 +11,27 @@ const alertSchema = new Schema(
             required: true,
             enum: ["Organization", "Individual"],
         },
+        recipients: { 
+            type: [{
+                receiptantId: Schema.Types.ObjectId,
+                isResponded: [Boolean,false],
+                invitationAccepted: Boolean
+            }],
+            ref: "Individual"
+        },
         patientName: {
             type: String,
         },
         currentLocation: {
-            type: { type: String },
-            coordinates: [Number],
+            type: {
+                type: String,
+                enum: ["Point"],
+                required: true,
+            },
+            coordinates: {
+                type: [Number],
+                required: true,
+            },
         },
         expiryTime: {
             type: Date,
