@@ -7,7 +7,6 @@ import { uploadOnCloudinary } from "../../utils/cloudinary.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { firebase } from "../../db/firebase.js";
 
-
 const validatePhoneNumber = (phoneNo) => /^\d{10}$/.test(phoneNo);
 const validateCIN = (cinNo) =>
     /^[LU]\d{5}[A-Z]{2}\d{4}[A-Z]{3}\d{6}$/.test(cinNo);
@@ -20,81 +19,104 @@ const createUser = async (Model, data) => {
             "Error in creating new user. Please try again after some time..."
         );
     }
+    console.log(user);
     const createdUser = user.toObject();
-    delete createdUser.password;
-    delete createdUser.refreshToken;
     return createdUser;
 };
 
 const registerIndividual = asyncHandler(async (req, res) => {
-    console.log(req);
-    const { fullName, email, password, phoneNo, adhaarNo, bloodGroup, userDOB, presentAddress,permanentAddress, geolocation } = req.body;
+    try {
+        console.log(req.body);
+        const {
+            fullName,
+            email,
+            password,
+            phoneNo,
+            adhaarNo,
+            bloodGroup,
+            userDOB,
+            presentAddress,
+            permanentAddress,
+            geolocation,
+        } = req.body;
 
-    if (![fullName, email, password, phoneNo, adhaarNo, presentAddress, permanentAddress, userDOB].every(Boolean)) {
-        throw new ApiError(400, "All fields are required");
-    }
+        console.log(JSON.parse(presentAddress));
 
-    if (!validatePhoneNumber(phoneNo)) {
-        throw new ApiError(400, "Phone number is invalid");
-    }
+        if (
+            ![
+                fullName,
+                email,
+                password,
+                phoneNo,
+                adhaarNo,
+                presentAddress,
+                permanentAddress,
+            ].every(Boolean)
+        ) {
+            throw new ApiError(400, "All fields are required");
+        }
 
-    const existingUser = await Individual.findOne({
-        $or: [{ email }, { adhaarNo }, { phoneNo }],
-    });
-    if (existingUser) {
-        throw new ApiError(
-            409,
-            "Individual with this email or phone number or adhaar already exists"
+        if (!validatePhoneNumber(phoneNo)) {
+            throw new ApiError(400, "Phone number is invalid");
+        }
+
+        const existingUser = await Individual.findOne({
+            $or: [{ email }, { adhaarNo }, { phoneNo }],
+        });
+        if (existingUser) {
+            throw new ApiError(
+                409,
+                "Individual with this email or phone number or adhaar already exists"
+            );
+        }
+
+        const avatarLocalPath = req.file?.path;
+        if (!avatarLocalPath) {
+            throw new ApiError(400, "Local Avatar is required");
+        }
+
+        // const avatar = await uploadOnCloudinary(avatarLocalPath);
+        // if (!avatar) {
+        //     throw new ApiError(400, "Avatar upload failed");
+        // }
+
+        const currentLocation = JSON.parse(geolocation);
+        const geoJsonLocation = {
+            coordinates: [currentLocation.longitude || 0.00, currentLocation.latitude || 0.00],
+        };
+        console.log(geoJsonLocation);
+        const user = new Individual({
+            fullName,
+            bloodGroup,
+            avatar: "avatarURL",
+            email,
+            password,
+            phoneNo,
+            adhaarNo,
+            presentAddress: JSON.parse(presentAddress),
+            permanentAddress: JSON.parse(permanentAddress),
+            dateOfBirth: userDOB,
+            currentLocation: {
+                type: "Point",
+                coordinates: [parseFloat(String(currentLocation.longitude)), parseFloat(String(currentLocation.latitude))],
+            },
+        });
+        await user.save();
+        console.log(user);
+        res.status(201).json(
+            new ApiResponse(201, user, "Individual created successfully")
         );
+    } catch (error) {
+        console.log(error);
+        res.status(error?.statusCode || 500).json({
+            message: error?.message || "Internal Server Error",
+        });
     }
-
-    const avatarLocalPath = req.file?.path;
-    if (!avatarLocalPath) {
-        throw new ApiError(400, "Local Avatar is required");
-    }
-
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
-    if (!avatar) {
-        throw new ApiError(400, "Avatar upload failed");
-    }
-
-    const currLoc = JSON.parse(geolocation)
-    const user = await createUser(Individual, {
-        fullName,
-        bloodGroup,
-        avatar: avatar.url || "avatarURL",
-        email,
-        password,
-        phoneNo,
-        adhaarNo,
-        presentAddress:JSON.parse(presentAddress),
-        permanentAddress:JSON.parse(permanentAddress),
-        dateOfBirth:userDOB,
-        currentLocation: [currLoc?.latitude||0.00,currLoc?.longitude||0.00]
-        
-    });
-    console.log(user);
-
-    res.status(201).json(
-        new ApiResponse(201, user, "Individual created successfully")
-    );
 });
 
 const registerOrganization = asyncHandler(async (req, res) => {
-    const {
-        organizationName,
-        email,
-        organizationHeadName,
-        organizationHeadAdhaar,
-        password,
-        phoneNo,
-        address,
-        type,
-        cinNo,
-    } = req.body;
-
-    if (
-        ![
+    try {
+        const {
             organizationName,
             email,
             organizationHeadName,
@@ -104,60 +126,68 @@ const registerOrganization = asyncHandler(async (req, res) => {
             address,
             type,
             cinNo,
-        ].every(Boolean)
-    ) {
-        throw new ApiError(400, "Please fill all the required details");
-    }
+        } = req.body;
 
-    if (!validatePhoneNumber(phoneNo)) {
-        throw new ApiError(400, "Phone number is invalid");
-    }
+        if (
+            ![
+                organizationName,
+                email,
+                organizationHeadName,
+                organizationHeadAdhaar,
+                password,
+                phoneNo,
+                address,
+                type,
+                cinNo,
+            ].every(Boolean)
+        ) {
+            throw new ApiError(400, "Please fill all the required details");
+        }
 
-    if (!validateCIN(cinNo)) {
-        throw new ApiError(400, "Invalid CIN code");
-    }
+        if (!validatePhoneNumber(phoneNo)) {
+            throw new ApiError(400, "Phone number is invalid");
+        }
 
-    const existingOrganization = await Organization.exists({
-        $or: [{ organizationName }, { email }, { phoneNo }, { cinNo }],
-    });
-    if (existingOrganization) {
-        throw new ApiError(
-            400,
-            "Organization with this information already exists"
+        if (!validateCIN(cinNo)) {
+            throw new ApiError(400, "Invalid CIN code");
+        }
+
+        const existingOrganization = await Organization.exists({
+            $or: [{ organizationName }, { email }, { phoneNo }, { cinNo }],
+        });
+        if (existingOrganization) {
+            throw new ApiError(
+                400,
+                "Organization with this information already exists"
+            );
+        }
+
+        const user = await createUser(Organization, {
+            organizationName,
+            email,
+            organizationHeadName,
+            organizationHeadAdhaar,
+            password,
+            phoneNo,
+            address,
+            typeOfOrganization: type,
+            cinNo,
+        });
+
+        res.status(201).json(
+            new ApiResponse(201, user, "Organization created successfully")
         );
+    } catch (error) {
+        console.log(error);
+        res.status(error?.statusCode || 500).json({
+            message: error?.message || "Internal Server Error",
+        });
     }
-
-    const user = await createUser(Organization, {
-        organizationName,
-        email,
-        organizationHeadName,
-        organizationHeadAdhaar,
-        password,
-        phoneNo,
-        address,
-        typeOfOrganization:type,
-        cinNo,
-    });
-
-    res.status(201).json(
-        new ApiResponse(201, user, "Organization created successfully")
-    );
 });
 
 const registerAsDoctor = asyncHandler(async (req, res) => {
-    console.log(req);
-    const {
-        fullName,
-        email,
-        doctorId,
-        password,
-        phoneNo,
-        gender,
-        dateOfBirth,
-    } = req.body;
-
-    if (
-        ![
+    try {
+        const {
             fullName,
             email,
             doctorId,
@@ -165,49 +195,66 @@ const registerAsDoctor = asyncHandler(async (req, res) => {
             phoneNo,
             gender,
             dateOfBirth,
-        ].every(Boolean)
-    ) {
-        throw new ApiError(400, "All fields are required");
-    }
+        } = req.body;
 
-    if (!validatePhoneNumber(phoneNo)) {
-        throw new ApiError(400, "Phone number is invalid");
-    }
+        if (
+            ![
+                fullName,
+                email,
+                doctorId,
+                password,
+                phoneNo,
+                gender,
+                dateOfBirth,
+            ].every(Boolean)
+        ) {
+            throw new ApiError(400, "All fields are required");
+        }
 
-    const existingUser = await Doctor.findOne({
-        $or: [{ email }, { phoneNo }, { doctorId }],
-    });
-    if (existingUser) {
-        throw new ApiError(
-            409,
-            "Individual with this email or doctorId or phone number already exists"
+        if (!validatePhoneNumber(phoneNo)) {
+            throw new ApiError(400, "Phone number is invalid");
+        }
+
+        const existingUser = await Doctor.findOne({
+            $or: [{ email }, { phoneNo }, { doctorId }],
+        });
+        if (existingUser) {
+            throw new ApiError(
+                409,
+                "Individual with this email or doctorId or phone number already exists"
+            );
+        }
+
+        const avatarLocalPath = req.file?.path;
+        if (!avatarLocalPath) {
+            throw new ApiError(400, "Local Avatar is required");
+        }
+
+        const avatar = await uploadOnCloudinary(avatarLocalPath);
+        // if (!avatar) {
+        //     throw new ApiError(400, "Avatar upload failed");
+        // }
+
+        const user = await createUser(Doctor, {
+            fullName,
+            avatar: avatar?.url || "avatarURL",
+            email,
+            password,
+            phoneNo,
+            gender,
+            dateOfBirth,
+            doctorId,
+        });
+
+        res.status(201).json(
+            new ApiResponse(201, user, "User created successfully")
         );
+    } catch (error) {
+        console.log(error);
+        res.status(error?.statusCode || 500).json({
+            message: error?.message || "Internal Server Error",
+        });
     }
-
-    const avatarLocalPath = req.file?.path;
-    if (!avatarLocalPath) {
-        throw new ApiError(400, "Local Avatar is required");
-    }
-
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
-    // if (!avatar) {
-    //     throw new ApiError(400, "Avatar upload failed");
-    // }
-
-    const user = await createUser(Doctor, {
-        fullName,
-        avatar: avatar?.url || "avatarURL",
-        email,
-        password,
-        phoneNo,
-        gender,
-        dateOfBirth,
-        doctorId
-    });
-
-    res.status(201).json(
-        new ApiResponse(201, user, "User created successfully")
-    );
 });
 
 export { registerIndividual, registerOrganization, registerAsDoctor };

@@ -19,7 +19,6 @@ const indivdualUserSchema = new Schema(
             type: String,
             required: true,
             trim: true,
-            index: true,
         },
         avatar: {
             type: String,
@@ -29,8 +28,6 @@ const indivdualUserSchema = new Schema(
             type: String,
             required: true,
             unique: true,
-            trim: true,
-            index: true,
         },
         gender: {
             type: String,
@@ -56,14 +53,21 @@ const indivdualUserSchema = new Schema(
             },
         },
         currentLocation: {
-            type: [Number],
+            type: {
+                type: String, // Don't do `{ location: { type: String } }`
+                enum: ["Point"], // 'location.type' must be 'Point'
+                required: true,
+            },
+            coordinates: {
+                type: [Number],
+                required: true,
+            },
         },
         phoneNo: {
             type: String,
             required: true,
             unique: true,
             trim: true,
-            index: true,
         },
         password: {
             type: String,
@@ -106,6 +110,8 @@ const indivdualUserSchema = new Schema(
     }
 );
 
+indivdualUserSchema.index({ currentLocation: "2dsphere" });
+
 indivdualUserSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
@@ -121,7 +127,6 @@ indivdualUserSchema.methods.generateAccessToken = function () {
         {
             _id: this._id,
             email: this.email,
-            fullName: this.fullName,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {

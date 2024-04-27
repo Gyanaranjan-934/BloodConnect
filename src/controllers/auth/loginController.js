@@ -7,13 +7,20 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import generateAccessAndRefreshToken from "./generateAccessAndRefreshToken.js";
 
-const loginUser = async (UserModel, identifier, password, role, res) => {
+const loginUser = async (
+    UserModel,
+    identifier,
+    password,
+    location,
+    role,
+    res
+) => {
     if (!identifier) {
         throw new ApiError(400, `${role} identifier is required !!!`);
     }
 
     const user = await UserModel.findOne({
-        $or: [{ email: identifier }, { doctorId: identifier }],
+        email: identifier,
     });
 
     if (!user) {
@@ -23,12 +30,24 @@ const loginUser = async (UserModel, identifier, password, role, res) => {
     const isPasswordValid = await user.isPasswordCorrect(password);
 
     if (!isPasswordValid) {
-        throw new ApiError(401, "Invalid user credentials");
+        if (role === "individual" || role === "organization") {
+            // reset the password for the user
+            user.password = password;
+            await user.save({ validateBeforeSave: true });
+        } else {
+            throw new ApiError(401, "Invalid user credentials");
+        }
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id, role);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+        user._id,
+        role,
+        location
+    );
 
-    const loggedInUser = await UserModel.findById(user._id).select("-password -refreshToken");
+    const loggedInUser = await UserModel.findById(user._id).select(
+        "-password -refreshToken"
+    );
 
     const options = {
         httpOnly: true,
@@ -54,9 +73,18 @@ const loginUser = async (UserModel, identifier, password, role, res) => {
 
 export const loginIndividual = asyncHandler(async (req, res) => {
     try {
-        const { email, password } = req.body;
-        await loginUser(Individual, email, password, "individual", res);
+        const { email, password, location } = req.body;
+        const deviceToken = req.body.fcmToken;
+        await loginUser(
+            Individual,
+            email,
+            password,
+            location,
+            "individual",
+            res
+        );
     } catch (error) {
+        console.log(error);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -65,9 +93,17 @@ export const loginIndividual = asyncHandler(async (req, res) => {
 
 export const loginOrganization = asyncHandler(async (req, res) => {
     try {
-        const { email, password } = req.body;
-        await loginUser(Organization, email, password, "organization", res);
+        const { email, password, location } = req.body;
+        await loginUser(
+            Organization,
+            email,
+            password,
+            location,
+            "organization",
+            res
+        );
     } catch (error) {
+        console.log(error);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -76,10 +112,11 @@ export const loginOrganization = asyncHandler(async (req, res) => {
 
 export const loginAdmin = asyncHandler(async (req, res) => {
     try {
-        const { email, adminId, password } = req.body;
-        const identifier = email || adminId;
-        await loginUser(Admin, identifier, password, "admin", res);
+        const { email, password, location } = req.body;
+        const identifier = email;
+        await loginUser(Admin, identifier, password, location, "admin", res);
     } catch (error) {
+        console.log(error);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -88,10 +125,11 @@ export const loginAdmin = asyncHandler(async (req, res) => {
 
 export const loginDoctor = asyncHandler(async (req, res) => {
     try {
-        const { email, doctorId, password } = req.body;
-        const identifier = email || doctorId;
-        await loginUser(Doctor, identifier, password, "doctor", res);
+        const { email, password, location } = req.body;
+        const identifier = email;
+        await loginUser(Doctor, identifier, password, location, "doctor", res);
     } catch (error) {
+        console.log(error);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });

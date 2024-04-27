@@ -20,13 +20,13 @@ export const updateReport = asyncHandler(async (req, res) => {
         const bloodReport = typeof bloodDetails === "string" ? JSON.parse(bloodDetails) : bloodDetails;
 
         // Find user
-        const user = await Individual.findById(userId);
+        const user = await Individual.findById(userId).populate("bloodReports");
         if (!user) {
             throw new ApiError(404, "User not found.");
         }
 
         // Create blood report
-        const createdBloodReport = await BloodReport.create({
+        const updatedReport = await BloodReport.findByIdAndUpdate(userId,{
             userId,
             bloodPressure: bloodReport.bloodPressure,
             sugarLevel: bloodReport.sugarLevel,
@@ -38,7 +38,7 @@ export const updateReport = asyncHandler(async (req, res) => {
         });
 
         // Update user's blood reports and events attended
-        user.bloodReports.push(createdBloodReport._id);
+        user.bloodReports.push(updatedReport._id);
         user.eventsAttended.push({ eventId, doctorId });
         await user.save();
 
@@ -50,7 +50,7 @@ export const updateReport = asyncHandler(async (req, res) => {
         event.donorsAttended.push(userId);
         await event.save();
 
-        return res.status(201).json(new ApiResponse(201, { bloodReportId: createdBloodReport._id }, "Blood report updated successfully"));
+        return res.status(201).json(new ApiResponse(201, { bloodReportId: updatedReport._id }, "Blood report updated successfully"));
     } catch (error) {
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",

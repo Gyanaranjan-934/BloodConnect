@@ -1,4 +1,5 @@
 import { Event } from "../../models/event.model";
+import { Doctor } from "../../models/users/doctor.model";
 import { Organization } from "../../models/users/organization.model";
 import { ApiError } from "../../utils/ApiError";
 import { ApiResponse } from "../../utils/ApiResponse";
@@ -19,6 +20,13 @@ export const createEvent = asyncHandler(async (req, res) => {
             throw new ApiError(400, "Time and date of the event are required");
         }
 
+        const doctorsFromDB = await Doctor.find({ _id: { $in: receiptantIds } });
+
+        if(doctorsFromDB.length !== receiptantIds.length){
+            throw new ApiError(400, "Some of the doctors are not are not in the application");
+        }
+
+
         // Check for the organization ID
         const requestedOrganizationID = req.user?._id;
         const actualOrganization = await Organization.findById(requestedOrganizationID);
@@ -32,7 +40,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         const eventCreated = await Event.create({
             name,
             organizationId: requestedOrganizationID,
-            doctors,
+            doctors: doctorsFromDB.map(doctor => doctor._id),
             staffCount,
             bedCount,
             maxCapacity,
@@ -47,7 +55,7 @@ export const createEvent = asyncHandler(async (req, res) => {
         }
 
         // Return success response
-        return res.status(201).json(new ApiResponse(201, eventCreated, "Event created successfully"));
+        return res.status(201).json(new ApiResponse(201, eventCreated, "Event created successfully, but for now our team will verify the details provided by you and will send you an email to confirm the event"));
     } catch (error) {
         // Catch and handle errors
         throw new ApiError(

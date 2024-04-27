@@ -14,6 +14,19 @@ const adminSchema = new Schema(
         avatar:{
             type: String,
         },
+        currentLocation: {
+            type: {
+                type: {
+                    type: String,
+                    enum: ["Point"],
+                    required: true,
+                },
+                coordinates: {
+                    type: [Number],
+                    required: true,
+                },
+            },
+        },
         adminId:{
             type:String,
             unique: true,
@@ -39,6 +52,8 @@ const adminSchema = new Schema(
         timestamps: true,
     }
 );
+
+adminSchema.index({ currentLocation: "2dsphere" });
 
 adminSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();

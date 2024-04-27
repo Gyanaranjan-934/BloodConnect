@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { or } from "firebase/firestore";
 
 const organizationSchema = new Schema(
     {
@@ -69,6 +70,19 @@ const organizationSchema = new Schema(
             type: Boolean,
             default: false
         },
+        currentLocation: {
+            type: {
+                type: {
+                    type: String,
+                    enum: ["Point"],
+                    required: true,
+                },
+                coordinates: {
+                    type: [Number],
+                    required: true,
+                },
+            },
+        },
         photos:{
             type: [String],
             validate: {
@@ -90,6 +104,8 @@ const organizationSchema = new Schema(
         timestamps: true,
     }
 );
+
+organizationSchema.index({ currentLocation: "2dsphere" });
 
 organizationSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();

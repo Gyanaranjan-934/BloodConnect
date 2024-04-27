@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import connectDB from "./db/index.js";
 import { app } from "./app.js";
 import { initializeFirebase } from "./db/firebase.js";
+import { getRedisClient } from "./utils/redies.js";
 
 dotenv.config({
     path: "./env",
@@ -13,6 +14,7 @@ connectDB()
             console.log(`server is listening at ${process.env.PORT}`);
         });
         initializeFirebase();
+        getRedisClient();
         // Initialize Firebase
         // const io = new Server(server, {
         //     pingTimeout: 60000,

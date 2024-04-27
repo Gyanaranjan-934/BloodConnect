@@ -4,6 +4,8 @@ import { ApiError } from "../../utils/ApiError";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { asyncHandler } from "../../utils/asyncHandler";
 
+
+// If any user register for the event through the application
 export const registerBySelf = asyncHandler(async (req, res) => {
     const userId = req.user?._id;
     const { eventId } = req.body;
@@ -43,6 +45,8 @@ export const registerBySelf = asyncHandler(async (req, res) => {
     }
 });
 
+
+// If any user directly comes to the event page, they will be registered for the event by the doctor
 export const registerByDoctor = asyncHandler(async (req, res) => {
     const doctorId = req.user?._id;
     const { userId, eventId } = req.body;

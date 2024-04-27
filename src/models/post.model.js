@@ -18,6 +18,17 @@ const postSchema = new Schema(
         description:{
             type: String
         },
+        location:{
+            type: {
+                type: {
+                    type: String,
+                    enum: ["Point"],
+                },
+                coordinates: {
+                    type: [Number],
+                },
+            },
+        },
         files:{
             type: [String],
             validate: {

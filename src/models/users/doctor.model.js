@@ -1,12 +1,34 @@
 import mongoose, { Schema } from 'mongoose'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { doc } from 'firebase/firestore'
 
 const doctorSchema = new Schema(
     {
         fullName: {
             type: String,
             required: true,
+        },
+        email:{
+            type: String,
+            required: true,
+            unique: true,
+            lowercase: true,
+            trim: true,
+            index: true,
+        },
+        currentLocation: {
+            type: {
+                type: {
+                    type: String,
+                    enum: ["Point"],
+                    required: true,
+                },
+                coordinates: {
+                    type: [Number],
+                    required: true,
+                },
+            },
         },
         doctorId: {
             type: String,
@@ -51,6 +73,8 @@ const doctorSchema = new Schema(
         timestamps: true
     }
 )
+
+doctorSchema.index({ currentLocation: "2dsphere" });
 
 doctorSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
