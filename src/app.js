@@ -4,9 +4,8 @@ import cookieParser from 'cookie-parser'
 // // routes import
 import userRouter from './routes/user.routes.js'
 import alertRouter from './routes/alert.routes.js'
-// import productRouter from './routes/product.routes.js'
-// import reviewRouter from './routes/rating.routes.js'
-// import chatRouter from './routes/chat.routes.js'
+import doctorRouter from './routes/doctor.routes.js'
+import eventRouter from './routes/event.routes.js'
 
 const app = express();
 
@@ -29,8 +28,6 @@ app.use(cookieParser());
 // // routes declarations
 app.use('/api/v1/auth',userRouter)
 app.use('/api/v1/alert',alertRouter)
-// app.use('/api/v1/products',productRouter)
-// app.use('/api/v1/reviews',reviewRouter)
-// app.use('/api/v1/chats',chatRouter)
-
+app.use('/api/v1/doctor',doctorRouter)
+app.use('/api/v1/event',eventRouter)
 export { app }

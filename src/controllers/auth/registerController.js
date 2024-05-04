@@ -3,9 +3,7 @@ import { ApiError } from "../../utils/ApiError.js";
 import { Individual } from "../../models/users/user.model.js";
 import { Organization } from "../../models/users/organization.model.js";
 import { Doctor } from "../../models/users/doctor.model.js";
-import { uploadOnCloudinary } from "../../utils/cloudinary.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
-import { firebase } from "../../db/firebase.js";
 
 const validatePhoneNumber = (phoneNo) => /^\d{10}$/.test(phoneNo);
 const validateCIN = (cinNo) =>
@@ -28,13 +26,13 @@ const registerIndividual = asyncHandler(async (req, res) => {
     try {
         console.log(req.body);
         const {
-            fullName,
+            name,
             email,
             password,
-            phoneNo,
+            phone,
             adhaarNo,
             bloodGroup,
-            userDOB,
+            dateOfBirth,
             presentAddress,
             permanentAddress,
             geolocation,
@@ -44,10 +42,11 @@ const registerIndividual = asyncHandler(async (req, res) => {
 
         if (
             ![
-                fullName,
+                name,
                 email,
                 password,
-                phoneNo,
+                phone,
+                dateOfBirth,
                 adhaarNo,
                 presentAddress,
                 permanentAddress,
@@ -56,12 +55,12 @@ const registerIndividual = asyncHandler(async (req, res) => {
             throw new ApiError(400, "All fields are required");
         }
 
-        if (!validatePhoneNumber(phoneNo)) {
+        if (!validatePhoneNumber(phone)) {
             throw new ApiError(400, "Phone number is invalid");
         }
 
         const existingUser = await Individual.findOne({
-            $or: [{ email }, { adhaarNo }, { phoneNo }],
+            $or: [{ email }, { adhaarNo }, { phone }],
         });
         if (existingUser) {
             throw new ApiError(
@@ -70,35 +69,38 @@ const registerIndividual = asyncHandler(async (req, res) => {
             );
         }
 
-        const avatarLocalPath = req.file?.path;
-        if (!avatarLocalPath) {
-            throw new ApiError(400, "Local Avatar is required");
-        }
-
-        // const avatar = await uploadOnCloudinary(avatarLocalPath);
-        // if (!avatar) {
-        //     throw new ApiError(400, "Avatar upload failed");
-        // }
+        const presentAddressParsed = JSON.parse(presentAddress);
+        const permanentAddressParsed = JSON.parse(permanentAddress);
 
         const currentLocation = JSON.parse(geolocation);
-        const geoJsonLocation = {
-            coordinates: [currentLocation.longitude || 0.00, currentLocation.latitude || 0.00],
-        };
-        console.log(geoJsonLocation);
+
         const user = new Individual({
-            fullName,
+            name,
             bloodGroup,
-            avatar: "avatarURL",
+            avatar: "",
             email,
             password,
-            phoneNo,
+            phone,
             adhaarNo,
-            presentAddress: JSON.parse(presentAddress),
-            permanentAddress: JSON.parse(permanentAddress),
-            dateOfBirth: userDOB,
+            presentAddress: {
+                street: presentAddressParsed.street,
+                city: presentAddressParsed.city,
+                state: presentAddressParsed.state,
+                pincode: presentAddressParsed.pincode,
+            },
+            permanentAddress: {
+                street: permanentAddressParsed.street,
+                city: permanentAddressParsed.city,
+                state: permanentAddressParsed.state,
+                pincode: permanentAddressParsed.pincode,
+            },
+            dateOfBirth: new Date(dateOfBirth),
             currentLocation: {
                 type: "Point",
-                coordinates: [parseFloat(String(currentLocation.longitude)), parseFloat(String(currentLocation.latitude))],
+                coordinates: [
+                    parseFloat(String(currentLocation.longitude)),
+                    parseFloat(String(currentLocation.latitude)),
+                ],
             },
         });
         await user.save();
@@ -117,7 +119,7 @@ const registerIndividual = asyncHandler(async (req, res) => {
 const registerOrganization = asyncHandler(async (req, res) => {
     try {
         const {
-            organizationName,
+            name,
             email,
             organizationHeadName,
             organizationHeadAdhaar,
@@ -126,11 +128,12 @@ const registerOrganization = asyncHandler(async (req, res) => {
             address,
             type,
             cinNo,
+            currentLocation,
         } = req.body;
 
         if (
             ![
-                organizationName,
+                name,
                 email,
                 organizationHeadName,
                 organizationHeadAdhaar,
@@ -153,7 +156,7 @@ const registerOrganization = asyncHandler(async (req, res) => {
         }
 
         const existingOrganization = await Organization.exists({
-            $or: [{ organizationName }, { email }, { phoneNo }, { cinNo }],
+            $or: [{ name }, { email }, { phoneNo }, { cinNo }],
         });
         if (existingOrganization) {
             throw new ApiError(
@@ -162,16 +165,33 @@ const registerOrganization = asyncHandler(async (req, res) => {
             );
         }
 
-        const user = await createUser(Organization, {
-            organizationName,
+        const addressParsed = JSON.parse(address);
+
+        const geolocation = JSON.parse(currentLocation);
+
+        const user = await Organization.create({
+            name,
             email,
             organizationHeadName,
             organizationHeadAdhaar,
             password,
             phoneNo,
-            address,
-            typeOfOrganization: type,
+            address: {
+                street: addressParsed.street,
+                city: addressParsed.city,
+                state: addressParsed.state,
+                pincode: addressParsed.pincode,
+            },
+            typeOfOrganization:
+                String(type).charAt(0).toUpperCase() + String(type).slice(1),
             cinNo,
+            currentLocation: {
+                type: "Point",
+                coordinates: [
+                    parseFloat(String(geolocation.longitude)),
+                    parseFloat(String(geolocation.latitude)),
+                ],
+            },
         });
 
         res.status(201).json(
@@ -225,23 +245,13 @@ const registerAsDoctor = asyncHandler(async (req, res) => {
             );
         }
 
-        const avatarLocalPath = req.file?.path;
-        if (!avatarLocalPath) {
-            throw new ApiError(400, "Local Avatar is required");
-        }
-
-        const avatar = await uploadOnCloudinary(avatarLocalPath);
-        // if (!avatar) {
-        //     throw new ApiError(400, "Avatar upload failed");
-        // }
-
-        const user = await createUser(Doctor, {
+        const user = await Doctor.create({
             fullName,
-            avatar: avatar?.url || "avatarURL",
+            avatar: "",
             email,
             password,
             phoneNo,
-            gender,
+            gender: String(gender).charAt(0).toUpperCase() + String(gender).slice(1),
             dateOfBirth,
             doctorId,
         });

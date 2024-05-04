@@ -70,11 +70,15 @@ export const createAlert = asyncHandler(async (req, res) => {
             },
         })
             .limit(parseInt(noOfDonorsToSend))
-            .select("-password -refreshToken -bloodReports");
+            .select(
+                "-password -refreshToken -bloodReports -__v -eventsAttended -eventsRegistered -receivedAlerts"
+            );
 
         console.log(nearbyUsers);
 
-        nearbyUsers =nearbyUsers.filter((user) => user.bloodGroup === bloodGroup);
+        nearbyUsers = nearbyUsers.filter(
+            (user) => user.bloodGroup === bloodGroup
+        );
 
         console.log(nearbyUsers);
 
@@ -125,9 +129,9 @@ export const getDonorListAndCreateAlert = asyncHandler(async (req, res) => {
 
         let alertDetails = await rediesClient.get(String(userId));
 
-        // if (alertDetails) {
-        //     await rediesClient.unlink(String(userId));
-        // }
+        if (alertDetails) {
+            await rediesClient.unlink(String(userId));
+        }
         console.log(alertDetails);
         alertDetails = JSON.parse(alertDetails);
 
@@ -205,7 +209,6 @@ export const getDonorListAndCreateAlert = asyncHandler(async (req, res) => {
                 <p>Please do not reply to this email. If you have any questions, please contact the respective person.</p>
             </div>
         `;
-
 
             donorList.map((recipient) => {
                 const emailSubject = "Alert Received";

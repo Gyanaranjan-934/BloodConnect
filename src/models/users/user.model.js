@@ -15,7 +15,7 @@ const indivdualUserSchema = new Schema(
             lowercase: true,
             trim: true,
         },
-        fullName: {
+        name: {
             type: String,
             required: true,
             trim: true,
@@ -63,7 +63,7 @@ const indivdualUserSchema = new Schema(
                 required: true,
             },
         },
-        phoneNo: {
+        phone: {
             type: String,
             required: true,
             unique: true,

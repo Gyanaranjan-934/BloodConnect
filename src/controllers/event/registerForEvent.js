@@ -1,8 +1,8 @@
-import { Event } from "../../models/event.model";
-import { Individual } from "../../models/users/user.model";
-import { ApiError } from "../../utils/ApiError";
-import { ApiResponse } from "../../utils/ApiResponse";
-import { asyncHandler } from "../../utils/asyncHandler";
+import { Event } from "../../models/event.model.js";
+import { Individual } from "../../models/users/user.model.js";
+import { ApiError } from "../../utils/ApiError.js";
+import { ApiResponse } from "../../utils/ApiResponse.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
 
 // If any user register for the event through the application

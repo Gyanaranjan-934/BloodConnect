@@ -1,10 +1,14 @@
-import mongoose, { Schema } from 'mongoose'
-import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
+import mongoose, { Schema } from "mongoose";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const eventSchema = new Schema(
     {
-        name: {
+        eventName: {
+            type: String,
+            required: true,
+        },
+        eventHeadName: {
             type: String,
             required: true,
         },
@@ -14,50 +18,82 @@ const eventSchema = new Schema(
         },
         doctors: {
             type: [Schema.Types.ObjectId],
-            ref: "Doctor"
+            ref: "Doctor",
         },
-        staffCount: {
+        maxDonorCapacity: {
             type: Number,
             required: true,
         },
-        bedCount:{
-            type: Number,
-            required: true
-        },
-        maxCapacity:{
-            type: Number,
-            required: true
-        },
-        isPaid:{
+        isPaid: {
             type: Boolean,
-            default: false
+            default: false,
         },
-        dateOfEvent:{
+        startDate: {
             type: Date,
-            required: true
+            required: true,
         },
-        timeOfEvent:{
+        endDate: {
+            type: Date,
+            required: true,
+        },
+        startTime: {
             type: String,
-            required: true
+            required: true,
         },
-        donorsRegisterd:{
+        endTime: {
+            type: String,
+            required: true,
+        },
+        targetTotalBlood: {
+            type: Number,
+            required: true,
+        },
+        availableStaffCount: {
+            type: Number,
+            required: true,
+        },
+        availableBedCount: {
+            type: Number,
+            required: true,
+        },
+        address: {
+            type: String,
+            required: true,
+        },
+        location: {
+            type: {
+                type: String,
+                enum: ["Point"],
+            },
+            coordinates: {
+                type: [Number],
+            },
+        },
+        paymentType: {
+            type: String,
+            enum: ["cash", "giftCard","coupon"],
+        },
+        paymentAmount: {
+            type: Number,
+        },
+        donorsRegisterd: {
             type: [Schema.Types.ObjectId],
-            ref:"Individual",
-            default: []
+            ref: "Individual",
+            default: [],
         },
-        donorsAttended:{
+        donorsAttended: {
             type: [Schema.Types.ObjectId],
-            ref:"Individual",
-            default: []
+            ref: "Individual",
+            default: [],
         },
-        isVerified:{
+        isVerified: {
             type: Boolean,
-            default: false
-        }
+            default: false,
+        },
     },
     {
-        timestamps: true
+        timestamps: true,
     }
-)
+);
 
 export const Event = mongoose.model("Event", eventSchema);

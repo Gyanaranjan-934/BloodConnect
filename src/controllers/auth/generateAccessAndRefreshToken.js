@@ -22,13 +22,15 @@ const generateAccessAndRefreshToken = async (userId, userType, location) => {
         const refreshToken = user.generateRefreshToken();
 
         user.refreshToken = refreshToken;
-        const currentLocation = JSON.parse(location);
-        console.log(currentLocation);
-        const geoJsonLocation = {
-            type: "Point",
-            coordinates: [parseFloat(String(currentLocation.longitude)), parseFloat(String(currentLocation.latitude))],
-        };
-        user.currentLocation = geoJsonLocation;
+        if(userType === "individual" || userType === "organization"){
+            const currentLocation = JSON.parse(location);
+            console.log(currentLocation);
+            const geoJsonLocation = {
+                type: "Point",
+                coordinates: [parseFloat(String(currentLocation.longitude)), parseFloat(String(currentLocation.latitude))],
+            };
+            user.currentLocation = geoJsonLocation;
+        }        
         await user.save({ validateBeforeSave: false });
 
         return { accessToken, refreshToken };

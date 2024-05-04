@@ -5,7 +5,7 @@ import { or } from "firebase/firestore";
 
 const organizationSchema = new Schema(
     {
-        organizationName: {
+        name: {
             type: String,
             required: true,
             unique: true,
@@ -34,11 +34,10 @@ const organizationSchema = new Schema(
         },
         address: {
             type: {
-                "house/plotNo": String,
-                district: String,
-                State: String,
-                Country: String,
-                PIN: Number,
+                street: String,
+                city: String,
+                state: String,
+                pincode: Number,
             },
             required: true,
         },

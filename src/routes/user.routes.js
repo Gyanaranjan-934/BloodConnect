@@ -21,11 +21,10 @@ const router = Router();
 
 router.post(
     "/individual/register",
-    upload.single("avatar"),
     registerIndividual
 );
 router.post("/organization/register", registerOrganization);
-router.post("/doctor/register", upload.single("avatar"), registerAsDoctor);
+router.post("/doctor/register", registerAsDoctor);
 router.route("/login/individual").post(loginIndividual);
 router.route("/login/organization").post(loginOrganization);
 router.route("/login/admin").post(loginAdmin);

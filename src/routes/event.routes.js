@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { verifyJWT } from "../middlewares/auth.middleware";
-import { createEvent } from "../controllers/event/createEvent";
-import { registerByDoctor, registerBySelf } from "../controllers/event/registerForEvent";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { createEvent } from "../controllers/event/createEvent.js";
+import { registerByDoctor, registerBySelf } from "../controllers/event/registerForEvent.js";
 
 const router = Router();
 

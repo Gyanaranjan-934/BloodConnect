@@ -17,19 +17,6 @@ const doctorSchema = new Schema(
             trim: true,
             index: true,
         },
-        currentLocation: {
-            type: {
-                type: {
-                    type: String,
-                    enum: ["Point"],
-                    required: true,
-                },
-                coordinates: {
-                    type: [Number],
-                    required: true,
-                },
-            },
-        },
         doctorId: {
             type: String,
             required: true,
@@ -50,7 +37,6 @@ const doctorSchema = new Schema(
         },
         avatar: {
             type: String,
-            required: true,
         },
         phoneNo:{
             type: String,

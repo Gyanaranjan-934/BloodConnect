@@ -9,7 +9,7 @@ export const individualDashboardController = asyncHandler(async (req, res) => {
         // Assuming `userId` is the ObjectId of the user you want to populate
         // .populate("receivedAlerts") // Populate receivedAlerts field with Alert documents
         // .populate("bloodReports") // Populate bloodReports field with BloodReport documents
-        const user = await Individual.findById(userId)
+        const user = await Individual.findById(userId).select("-password -refreshToken -__v -currentLocation")
             // .populate("eventsRegistered") // Populate eventsRegistered field with Event documents
             // .populate({
             //     path: "eventsAttended.eventId", // Populate eventId field within eventsAttended array with Event documents
