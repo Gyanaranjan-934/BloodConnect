@@ -10,8 +10,9 @@ export const showSenderCreatedAlerts = asyncHandler(async (req, res) => {
         console.log(userId);
         const alert = await Alert.find({
             senderId: userId,
-        });
-        // if (!alert || alert.senderId !== req.user._id) {
+        }).sort({ createdAt: -1 });
+        console.log(alert);
+        // if (!alert || !alert.senderId.equals(req.user._id)) {
         //     throw new ApiError(
         //         401,
         //         "Either you are not the owner of the alert or the alert does not exist"
@@ -36,7 +37,7 @@ export const showRecipientReceivedAlerts = asyncHandler(async (req, res) => {
             recipients: {
                 $elemMatch: { recipientId: userId },
             },
-        });
+        }).sort({ createdAt: -1 });
         // check if the alert is expired
 
         // const unExpiredAlerts = alerts.receivedAlerts.filter((alert) => {
@@ -65,7 +66,7 @@ export const showRespondedAlerts = asyncHandler(async (req, res) => {
 
         const respondedAlerts = alerts.receivedAlerts.filter((alert) => {
             const receiver = alert.recipients.find(
-                (r) => r.receiptantId === req.user._id
+                (r) => r.recipientId.equals(receiptantId)
             );
             return receiver.isResponded;
         });
@@ -120,7 +121,7 @@ export const deleteAlertByRecipient = asyncHandler(async (req, res) => {
             );
         }
         alert.recipients = alert.recipients.filter(
-            (r) => r.recipientId !== req.user._id
+            (r) => !r.recipientId.equals(req.user._id)
         );
         await alert.save();
         return res

@@ -111,15 +111,16 @@ export const updateAlert = asyncHandler(async (req, res) => {
 
 export const respondAlert = asyncHandler(async (req, res) => {
     try {
-        const { alertId, invitationAccepted } = req.body;
+        const { alertId, isAccepted } = req.body;
         const receiptantId = req.user._id;
         const alert = await Alert.findById(alertId);
         if (!alert) {
             throw new ApiError(404, "Alert does not exist");
         }
-
+        console.log(receiptantId);
+        console.log(alert.recipients);
         const recipient = alert.recipients.find(
-            (r) => r.receiptantId === receiptantId
+            (r) => r.recipientId.equals(receiptantId)
         );
         if (!recipient) {
             throw new ApiError(404, "You are not the recipient of the alert");
@@ -130,14 +131,14 @@ export const respondAlert = asyncHandler(async (req, res) => {
         }
 
         recipient.isResponded = true;
-        recipient.invitationAccepted = invitationAccepted;
+        recipient.invitationAccepted = isAccepted;
 
-        const updateAlert = await alert.save();
+        await alert.save();
 
         return res
             .status(200)
             .json(
-                new ApiResponse(200, updateAlert, "Alert updated successfully, you have to select the receiptant to respond to the alert after this they will receive the mail of the alert")
+                new ApiResponse(200, {}, "You have responded to the alert")
             );
     } catch (error) {
         console.log(error);

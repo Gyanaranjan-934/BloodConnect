@@ -9,7 +9,7 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 export const registerBySelf = asyncHandler(async (req, res) => {
     const userId = req.user?._id;
     const { eventId } = req.body;
-
+    console.log(eventId);
     try {
         // Validation
         if (!eventId) {
@@ -20,9 +20,10 @@ export const registerBySelf = asyncHandler(async (req, res) => {
         if (!event) {
             throw new ApiError(404, "Event not found");
         }
+        console.log(event.donorsRegisterd);
 
         // Check if user is already registered
-        if (event.donorsRegistered.includes(userId)) {
+        if (event.donorsRegisterd.includes(userId)) {
             throw new ApiError(400, "User is already registered for this event");
         }
 
@@ -34,7 +35,8 @@ export const registerBySelf = asyncHandler(async (req, res) => {
         }
 
         // Update event and user
-        event.donorsRegistered.push(userId);
+        event.donorsRegisterd.push(userId);
+        await event.save();
         const user = await Individual.findByIdAndUpdate(userId, { $push: { eventsRegistered: eventId } });
 
         return res.status(200).json(new ApiResponse(200, {}, "User registered successfully for the event"));

@@ -40,21 +40,6 @@ export const createAlert = asyncHandler(async (req, res) => {
         const longitude = currentLocation.longitude;
         const latitude = currentLocation.latitude;
         console.log(longitude, latitude);
-        // Find nearby users within 10 kilometers
-        // const nearbyUsers = await Individual.aggregate([
-        //     {
-        //         $geoNear: {
-        //             near: {
-        //                 type: "Point",
-        //                 coordinates: [longitude, latitude],
-        //             },
-        //             distanceField: "distance", // Field to add distance from the queried point
-        //             spherical: true,
-        //             maxDistance: 10000,
-        //         },
-        //     },
-        //     { $limit: parseInt(noOfDonorsToSend) }, // Limit the number of results
-        // ]);
         let nearbyUsers = await Individual.find({
             currentLocation: {
                 $near: {
@@ -65,11 +50,10 @@ export const createAlert = asyncHandler(async (req, res) => {
                             parseFloat(String(latitude)),
                         ],
                     },
-                    $maxDistance: 30000,
+                    $maxDistance: 200000,
                 },
             },
-        })
-            .limit(parseInt(noOfDonorsToSend))
+        }).limit(parseInt(noOfDonorsToSend))
             .select(
                 "-password -refreshToken -bloodReports -__v -eventsAttended -eventsRegistered -receivedAlerts"
             );
@@ -86,12 +70,12 @@ export const createAlert = asyncHandler(async (req, res) => {
 
         const imageLocalPath = req.file?.path;
         let imageCloudinaryUrl = "";
-        if (imageLocalPath) {
-            imageCloudinaryUrl = await uploadOnCloudinary(imageLocalPath);
-            if (imageCloudinaryUrl) {
-                imageCloudinaryUrl = imageCloudinaryUrl.url;
-            }
-        }
+        // if (imageLocalPath) {
+        //     imageCloudinaryUrl = await uploadOnCloudinary(imageLocalPath);
+        //     if (imageCloudinaryUrl) {
+        //         imageCloudinaryUrl = imageCloudinaryUrl.url;
+        //     }
+        // }
 
         const alertDetails = JSON.stringify({
             patientName,
@@ -129,11 +113,11 @@ export const getDonorListAndCreateAlert = asyncHandler(async (req, res) => {
 
         let alertDetails = await rediesClient.get(String(userId));
 
-        if (alertDetails) {
-            await rediesClient.unlink(String(userId));
-        }
-        console.log(alertDetails);
+        // if (alertDetails) {
+        //     await rediesClient.unlink(String(userId));
+        // }
         alertDetails = JSON.parse(alertDetails);
+        console.log(alertDetails.address);
 
         if (donorList) {
             const [year, month, day] = alertDetails.dateOfRequirement
