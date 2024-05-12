@@ -29,54 +29,23 @@ export const createEvent = asyncHandler(async (req, res) => {
         } = JSON.parse(eventDetails);
         console.log(JSON.parse(eventDetails));
         // Validation: Check if required fields are filled
-        // if (
-        //     ![
-        //         eventName,
-        //         eventHeadName,
-        //         startDate,
-        //         endDate,
-        //         startTime,
-        //         endTime,
-        //         isPaid,
-        //         targetTotalBlood,
-        //         maxDonorCapacity,
-        //         availableStaffCount,
-        //         availableBedCount,
-        //         doctorsList,
-        //         address,
-        //         location,
-        //     ].every((item) =>
-        //         typeof item === "string"
-        //             ? item.trim() !== ""
-        //             : typeof item === "number"
-        //               ? item > 0
-        //               : false
-        //     )
-        // ) {
-        //     throw new ApiError(400, "Please fill all the required details");
-        // }
-
-        // if (
-        //     ![
-        //         eventName,
-        //         eventHeadName,
-        //         startDate,
-        //         endDate,
-        //         startTime,
-        //         endTime,
-        //         isPaid,
-        //         targetTotalBlood,
-        //         maxDonorCapacity,
-        //         availableStaffCount,
-        //         availableBedCount,
-        //         doctorsList,
-        //         address,
-        //         location,
-        //     ].every(Boolean)
-        // ) {
-        //     throw new ApiError(400, "All fields are required");
-        // }
-
+        if (
+            !eventName ||
+            !eventHeadName ||
+            !startDate ||
+            !endDate ||
+            !startTime ||
+            !endTime ||
+            !targetTotalBlood ||
+            !maxDonorCapacity ||
+            !availableStaffCount ||
+            !availableBedCount ||
+            !doctorsList ||
+            !address ||
+            !location
+        ) {
+            throw new ApiError(400, "Please fill all the required details");
+        }
         if (isPaid) {
             if (paymentType === "cash" && !paymentAmount) {
                 throw new ApiError(400, "Payment type and amount are required");
@@ -197,9 +166,8 @@ export const createEvent = asyncHandler(async (req, res) => {
             );
     } catch (error) {
         // Catch and handle errors
-        throw new ApiError(
-            error?.statusCode || 500,
-            error?.message || "Internal Server Error"
-        );
+        res.status(error?.statusCode || 500).json({
+            message: error?.message || "Internal Server Error",
+        });
     }
 });

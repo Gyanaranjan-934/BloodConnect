@@ -24,21 +24,22 @@ const organizationSchema = new Schema(
             type: String,
             required: true,
             trim: true,
-            index: true,
         },
         organizationHeadAdhaar: {
             type: String,
             required: true,
             trim: true,
             length: 12,
+            unique: true,
         },
         address: {
             type: {
                 street: String,
                 city: String,
                 state: String,
-                pincode: Number,
+                pincode: String,
             },
+            _id: false,
             required: true,
         },
         events:{
@@ -51,7 +52,7 @@ const organizationSchema = new Schema(
             enum: ['Healthcare', 'Educational', 'Charity','Other'],
             required: true
         },
-        phoneNo: {
+        phone: {
             type: String,
             required: true,
             unique: true,
@@ -71,15 +72,13 @@ const organizationSchema = new Schema(
         },
         currentLocation: {
             type: {
-                type: {
-                    type: String,
-                    enum: ["Point"],
-                    required: true,
-                },
-                coordinates: {
-                    type: [Number],
-                    required: true,
-                },
+                type: String,
+                enum: ["Point"],
+                required: true,
+            },
+            coordinates: {
+                type: [Number],
+                required: true,
             },
         },
         photos:{

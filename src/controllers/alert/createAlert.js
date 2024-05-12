@@ -1,7 +1,7 @@
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Alert } from "../../models/alert.model.js";
-import { Individual } from "../../models/users/user.model.js";
+import { Individual } from "../../models/users/individual.model.js";
 import { uploadOnCloudinary } from "../../utils/cloudinary.js";
 import { rediesClient } from "../../utils/redies.js";
 import { sendEmail } from "../../utils/nodemailer.js";
@@ -70,12 +70,12 @@ export const createAlert = asyncHandler(async (req, res) => {
 
         const imageLocalPath = req.file?.path;
         let imageCloudinaryUrl = "";
-        // if (imageLocalPath) {
-        //     imageCloudinaryUrl = await uploadOnCloudinary(imageLocalPath);
-        //     if (imageCloudinaryUrl) {
-        //         imageCloudinaryUrl = imageCloudinaryUrl.url;
-        //     }
-        // }
+        if (imageLocalPath) {
+            imageCloudinaryUrl = await uploadOnCloudinary(imageLocalPath);
+            if (imageCloudinaryUrl) {
+                imageCloudinaryUrl = imageCloudinaryUrl.url;
+            }
+        }
 
         const alertDetails = JSON.stringify({
             patientName,
@@ -113,9 +113,9 @@ export const getDonorListAndCreateAlert = asyncHandler(async (req, res) => {
 
         let alertDetails = await rediesClient.get(String(userId));
 
-        // if (alertDetails) {
-        //     await rediesClient.unlink(String(userId));
-        // }
+        if (alertDetails) {
+            await rediesClient.unlink(String(userId));
+        }
         alertDetails = JSON.parse(alertDetails);
         console.log(alertDetails.address);
 
@@ -174,13 +174,13 @@ export const getDonorListAndCreateAlert = asyncHandler(async (req, res) => {
             const html = `
             <div style="text-align: center; font-family: Arial, sans-serif;">
                 <h1 style="font-size: 24px; color: red; font-weight: bold;">Alert Received</h1>
-                <p style="font-size: 16px; color: red; font-weight: bold;">You have received an alert from ${req.user.fullName} for patient named ${alert.patientName}</p>
+                <p style="font-size: 16px; color: red; font-weight: bold;">You have received an alert from ${req.user.name} for patient named ${alert.patientName}</p>
                 <p style="font-size: 16px; color: red; font-weight: bold;">Please respond to the alert in the application.</p>
                 <div>
                         <p>Date of Requirement : ${alert.dateOfRequirement}</p>
                         <p>Expiry Time of Alert : ${alert.expiryTime}</p>
                         <p>Patient Name : ${alert.patientName}</p>
-                        <img src="${alert.patientPhoto}" alt="Patient Photo" style="width:200px; height:200px;">
+                        <img src="${alert.patientPhoto}" alt="${alert.patientName}" style="width:200px; height:200px;">
                         <p>Patient Blood Group : ${alert.bloodGroup}</p>
                         <p>Patient Problem Description : ${alert.problemDescription}</p>
                         <p>Patient Age : ${alert.age}</p>
@@ -196,7 +196,7 @@ export const getDonorListAndCreateAlert = asyncHandler(async (req, res) => {
 
             donorList.map((recipient) => {
                 const emailSubject = "Alert Received";
-                const emailText = `Hii ${recipient.fullName.split(" ")[0]}, You have received an alert from ${alert.senderId.email} for patient named ${alert.patientName}`;
+                const emailText = `Hii ${recipient.name.split(" ")[0]}, You have received an alert from ${alert.senderId.email} for patient named ${alert.patientName}`;
                 const bodyHTML = html;
                 sendEmail(recipient.email, emailSubject, emailText, bodyHTML);
             });

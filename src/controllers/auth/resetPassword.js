@@ -1,8 +1,7 @@
-import { User } from "../../models/user.model.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import {ApiError} from '../../utils/ApiError.js'
 import { ApiResponse } from "../../utils/ApiResponse.js";
-import { Individual } from "../../models/users/user.model.js";
+import { Individual } from "../../models/users/individual.model.js";
 import { Organization } from "../../models/users/organization.model.js";
 import { Admin } from "../../models/users/admin.model.js";
 

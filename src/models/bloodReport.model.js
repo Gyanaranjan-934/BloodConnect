@@ -24,6 +24,12 @@ const bloodReport = new Schema(
         heartRateCount:{
             type: Number
         },
+        weight:{
+            type: Number
+        },
+        height:{
+            type: Number
+        },
         updatedBy:{
             type: Schema.Types.ObjectId,
             ref:"Doctor"

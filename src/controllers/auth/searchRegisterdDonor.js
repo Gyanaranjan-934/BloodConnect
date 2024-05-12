@@ -1,5 +1,5 @@
 import { Event } from "../../models/event.model";
-import { Individual } from "../../models/users/user.model";
+import { Individual } from "../../models/users/individual.model";
 import { ApiError } from "../../utils/ApiError";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { asyncHandler } from "../../utils/asyncHandler";

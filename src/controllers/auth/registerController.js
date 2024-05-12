@@ -1,6 +1,6 @@
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { ApiError } from "../../utils/ApiError.js";
-import { Individual } from "../../models/users/user.model.js";
+import { Individual } from "../../models/users/individual.model.js";
 import { Organization } from "../../models/users/organization.model.js";
 import { Doctor } from "../../models/users/doctor.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
@@ -9,92 +9,28 @@ const validatePhoneNumber = (phoneNo) => /^\d{10}$/.test(phoneNo);
 const validateCIN = (cinNo) =>
     /^[LU]\d{5}[A-Z]{2}\d{4}[A-Z]{3}\d{6}$/.test(cinNo);
 
-const createUser = async (Model, data) => {
-    const user = await Model.create(data);
-    if (!user) {
-        throw new ApiError(
-            500,
-            "Error in creating new user. Please try again after some time..."
-        );
-    }
-    console.log(user);
-    const createdUser = user.toObject();
-    return createdUser;
-};
-
 const registerIndividual = asyncHandler(async (req, res) => {
     try {
         console.log(req.body);
-        const {
-            name,
-            email,
-            password,
-            phone,
-            adhaarNo,
-            bloodGroup,
-            dateOfBirth,
-            presentAddress,
-            permanentAddress,
-            geolocation,
-        } = req.body;
+        const { name, email, password, bloodGroup, currentLocation } = req.body;
 
-        console.log(JSON.parse(presentAddress));
-
-        if (
-            ![
-                name,
-                email,
-                password,
-                phone,
-                dateOfBirth,
-                adhaarNo,
-                presentAddress,
-                permanentAddress,
-            ].every(Boolean)
-        ) {
+        if (![name, email, password, bloodGroup].every(Boolean)) {
             throw new ApiError(400, "All fields are required");
         }
 
-        if (!validatePhoneNumber(phone)) {
-            throw new ApiError(400, "Phone number is invalid");
-        }
-
         const existingUser = await Individual.findOne({
-            $or: [{ email }, { adhaarNo }, { phone }],
+            email,
         });
+
         if (existingUser) {
-            throw new ApiError(
-                409,
-                "Individual with this email or phone number or adhaar already exists"
-            );
+            throw new ApiError(409, "User with this email already exists");
         }
-
-        const presentAddressParsed = JSON.parse(presentAddress);
-        const permanentAddressParsed = JSON.parse(permanentAddress);
-
-        const currentLocation = JSON.parse(geolocation);
 
         const user = new Individual({
             name,
             bloodGroup,
-            avatar: "",
             email,
             password,
-            phone,
-            adhaarNo,
-            presentAddress: {
-                street: presentAddressParsed.street,
-                city: presentAddressParsed.city,
-                state: presentAddressParsed.state,
-                pincode: presentAddressParsed.pincode,
-            },
-            permanentAddress: {
-                street: permanentAddressParsed.street,
-                city: permanentAddressParsed.city,
-                state: permanentAddressParsed.state,
-                pincode: permanentAddressParsed.pincode,
-            },
-            dateOfBirth: new Date(dateOfBirth),
             currentLocation: {
                 type: "Point",
                 coordinates: [
@@ -104,7 +40,7 @@ const registerIndividual = asyncHandler(async (req, res) => {
             },
         });
         await user.save();
-        console.log(user);
+
         res.status(201).json(
             new ApiResponse(201, user, "Individual created successfully")
         );
@@ -124,30 +60,30 @@ const registerOrganization = asyncHandler(async (req, res) => {
             organizationHeadName,
             organizationHeadAdhaar,
             password,
-            phoneNo,
+            phone,
             address,
-            type,
+            typeOfOrganization,
             cinNo,
             currentLocation,
         } = req.body;
+        console.log(req.body);
 
         if (
-            ![
-                name,
-                email,
-                organizationHeadName,
-                organizationHeadAdhaar,
-                password,
-                phoneNo,
-                address,
-                type,
-                cinNo,
-            ].every(Boolean)
+            !name ||
+            !email ||
+            !organizationHeadName ||
+            !organizationHeadAdhaar ||
+            !password ||
+            !phone ||
+            !address ||
+            !typeOfOrganization ||
+            !cinNo ||
+            !currentLocation
         ) {
             throw new ApiError(400, "Please fill all the required details");
         }
 
-        if (!validatePhoneNumber(phoneNo)) {
+        if (!validatePhoneNumber(phone)) {
             throw new ApiError(400, "Phone number is invalid");
         }
 
@@ -156,7 +92,7 @@ const registerOrganization = asyncHandler(async (req, res) => {
         }
 
         const existingOrganization = await Organization.exists({
-            $or: [{ name }, { email }, { phoneNo }, { cinNo }],
+            $or: [{ name }, { email }, { phone }, { cinNo }],
         });
         if (existingOrganization) {
             throw new ApiError(
@@ -165,31 +101,28 @@ const registerOrganization = asyncHandler(async (req, res) => {
             );
         }
 
-        const addressParsed = JSON.parse(address);
-
-        const geolocation = JSON.parse(currentLocation);
-
         const user = await Organization.create({
             name,
             email,
             organizationHeadName,
             organizationHeadAdhaar,
             password,
-            phoneNo,
+            phone,
             address: {
-                street: addressParsed.street,
-                city: addressParsed.city,
-                state: addressParsed.state,
-                pincode: addressParsed.pincode,
+                street: address.street,
+                city: address.city,
+                state: address.state,
+                pincode: address.pincode,
             },
             typeOfOrganization:
-                String(type).charAt(0).toUpperCase() + String(type).slice(1),
+                String(typeOfOrganization).charAt(0).toUpperCase() +
+                String(typeOfOrganization).slice(1),
             cinNo,
             currentLocation: {
                 type: "Point",
                 coordinates: [
-                    parseFloat(String(geolocation.longitude)),
-                    parseFloat(String(geolocation.latitude)),
+                    parseFloat(String(currentLocation.longitude)),
+                    parseFloat(String(currentLocation.latitude)),
                 ],
             },
         });
@@ -207,36 +140,18 @@ const registerOrganization = asyncHandler(async (req, res) => {
 
 const registerAsDoctor = asyncHandler(async (req, res) => {
     try {
-        const {
-            fullName,
-            email,
-            doctorId,
-            password,
-            phoneNo,
-            gender,
-            dateOfBirth,
-        } = req.body;
+        const { name, email, doctorId, password, phone } = req.body;
 
-        if (
-            ![
-                fullName,
-                email,
-                doctorId,
-                password,
-                phoneNo,
-                gender,
-                dateOfBirth,
-            ].every(Boolean)
-        ) {
+        if (!name || !email || !doctorId || !password || !phone) {
             throw new ApiError(400, "All fields are required");
         }
 
-        if (!validatePhoneNumber(phoneNo)) {
+        if (!validatePhoneNumber(phone)) {
             throw new ApiError(400, "Phone number is invalid");
         }
 
         const existingUser = await Doctor.findOne({
-            $or: [{ email }, { phoneNo }, { doctorId }],
+            $or: [{ email }, { phone }, { doctorId }],
         });
         if (existingUser) {
             throw new ApiError(
@@ -246,13 +161,10 @@ const registerAsDoctor = asyncHandler(async (req, res) => {
         }
 
         const user = await Doctor.create({
-            fullName,
-            avatar: "",
+            name,
             email,
             password,
-            phoneNo,
-            gender: String(gender).charAt(0).toUpperCase() + String(gender).slice(1),
-            dateOfBirth,
+            phone,
             doctorId,
         });
 

@@ -1,15 +1,17 @@
 import { Organization } from "../../models/users/organization.model.js";
-import { Individual } from "../../models/users/user.model.js";
+import { Individual } from "../../models/users/individual.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
-export const searchDonors = asyncHandler(async (req, res) => {
+export const searchNearbyOrganizations = asyncHandler(async (req, res) => {
     try {
         const { location } = req.query;
+        console.log(location);
         const currentLocation = JSON.parse(location);
         const longitude = currentLocation.longitude;
         const latitude = currentLocation.latitude;
-        const nearbyUsers = await Individual.find({
+        console.log(longitude, latitude); 
+        const nearbyUsers = await Organization.find({
             currentLocation: {
                 $near: {
                     $geometry: {
@@ -19,27 +21,12 @@ export const searchDonors = asyncHandler(async (req, res) => {
                             parseFloat(String(latitude)),
                         ],
                     },
-                    $maxDistance: 10000,
+                    $maxDistance: 200000,
                 },
             },
-        });
+        }).select("_id name cinNo currentLocation email phone address");
 
-        const nearbyOrganizations = await Organization.find({
-            currentLocation: {
-                $near: {
-                    $geometry: {
-                        type: "Point",
-                        coordinates: [
-                            parseFloat(String(longitude)),
-                            parseFloat(String(latitude)),
-                        ],
-                    },
-                    $maxDistance: 10000,
-                },
-            },
-        });
-
-        nearbyUsers.push(...nearbyOrganizations);
+        console.log(nearbyUsers);
 
         return res
             .status(200)

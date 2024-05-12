@@ -8,13 +8,16 @@ import {
 import {
     getAllEventsForOrganization,
     getAllUpcomingEventsForIndividual,
+    getDonorsAttendedByDoctor,
+    getEventDetails,
+    getEventsForDoctor,
     getRegisteredEventsOfIndividual,
 } from "../controllers/event/showAndDeleteEvent.js";
 
 const router = Router();
 
 router.route("/create").post(verifyJWT, createEvent);
-router.route("/register-by-doctor").put(verifyJWT, registerByDoctor);
+router.route("/register-by-doctor").post(verifyJWT, registerByDoctor);
 router.route("/register-by-self").post(verifyJWT, registerBySelf);
 router
     .route("/get-upcoming-events")
@@ -24,4 +27,7 @@ router
     .route("/get-registered-events")
     .get(verifyJWT, getRegisteredEventsOfIndividual);
 
+router.route("/get-events-of-doctor").get(verifyJWT, getEventsForDoctor);
+router.route("/get-event-details").get(verifyJWT, getEventDetails);
+router.route("/get-attended-donors").get(verifyJWT, getDonorsAttendedByDoctor);
 export default router;

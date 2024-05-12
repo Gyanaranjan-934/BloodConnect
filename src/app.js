@@ -6,6 +6,7 @@ import userRouter from './routes/user.routes.js'
 import alertRouter from './routes/alert.routes.js'
 import doctorRouter from './routes/doctor.routes.js'
 import eventRouter from './routes/event.routes.js'
+import reportRouter from './routes/report.routes.js'
 
 const app = express();
 
@@ -30,4 +31,5 @@ app.use('/api/v1/auth',userRouter)
 app.use('/api/v1/alert',alertRouter)
 app.use('/api/v1/doctor',doctorRouter)
 app.use('/api/v1/event',eventRouter)
+app.use('/api/v1/report',reportRouter)
 export { app }

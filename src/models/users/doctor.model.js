@@ -5,7 +5,7 @@ import { doc } from 'firebase/firestore'
 
 const doctorSchema = new Schema(
     {
-        fullName: {
+        name: {
             type: String,
             required: true,
         },
@@ -21,7 +21,6 @@ const doctorSchema = new Schema(
             type: String,
             required: true,
             unique: true,
-            index: true
         },
         password: {
             type: String,
@@ -33,17 +32,15 @@ const doctorSchema = new Schema(
         },
         dateOfBirth:{
             type: String,
-            required: true
         },
         avatar: {
             type: String,
         },
-        phoneNo:{
+        phone:{
             type: String,
             required: true,
             unique: true,
             trim: true,
-            index: true,
         },
         attendedCamps:{
             type: [Schema.Types.ObjectId],

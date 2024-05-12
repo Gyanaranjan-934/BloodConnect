@@ -1,7 +1,7 @@
 import { Admin } from "../../models/users/admin.model.js";
 import { Doctor } from "../../models/users/doctor.model.js";
 import { Organization } from "../../models/users/organization.model.js";
-import { Individual } from "../../models/users/user.model.js";
+import { Individual } from "../../models/users/individual.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
@@ -73,14 +73,13 @@ const loginUser = async (
 
 export const loginIndividual = asyncHandler(async (req, res) => {
     try {
-        const { email, password, location } = req.body;
-        const deviceToken = req.body.fcmToken;
+        const { email, password, location, userType } = req.body;
         await loginUser(
             Individual,
             email,
             password,
             location,
-            "individual",
+            userType,
             res
         );
     } catch (error) {
@@ -93,13 +92,13 @@ export const loginIndividual = asyncHandler(async (req, res) => {
 
 export const loginOrganization = asyncHandler(async (req, res) => {
     try {
-        const { email, password, location } = req.body;
+        const { email, password, location, userType } = req.body;
         await loginUser(
             Organization,
             email,
             password,
             location,
-            "organization",
+            userType,
             res
         );
     } catch (error) {

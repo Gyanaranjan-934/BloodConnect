@@ -1,9 +1,9 @@
-import { BloodReport } from "../../models/bloodReport.model";
-import { Event } from "../../models/event.model";
-import { Individual } from "../../models/users/user.model";
-import { asyncHandler } from "../../utils/asyncHandler";
-import { ApiError } from "../../utils/ApiError";
-import { ApiResponse } from "../../utils/ApiResponse";
+import { BloodReport } from "../../models/bloodReport.model.js";
+import { Event } from "../../models/event.model.js";
+import { Individual } from "../../models/users/individual.model.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
+import { ApiError } from "../../utils/ApiError.js";
+import { ApiResponse } from "../../utils/ApiResponse.js";
 
 export const updateReport = asyncHandler(async (req, res) => {
     try {

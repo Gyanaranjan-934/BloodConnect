@@ -1,7 +1,7 @@
 import { Admin } from "../../models/users/admin.model.js";
 import { Doctor } from "../../models/users/doctor.model.js";
 import { Organization } from "../../models/users/organization.model.js";
-import { Individual } from "../../models/users/user.model.js";
+import { Individual } from "../../models/users/individual.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 
 const generateAccessAndRefreshToken = async (userId, userType, location) => {
@@ -23,11 +23,9 @@ const generateAccessAndRefreshToken = async (userId, userType, location) => {
 
         user.refreshToken = refreshToken;
         if(userType === "individual" || userType === "organization"){
-            const currentLocation = JSON.parse(location);
-            console.log(currentLocation);
             const geoJsonLocation = {
                 type: "Point",
-                coordinates: [parseFloat(String(currentLocation.longitude)), parseFloat(String(currentLocation.latitude))],
+                coordinates: [parseFloat(String(location.longitude)), parseFloat(String(location.latitude))],
             };
             user.currentLocation = geoJsonLocation;
         }        

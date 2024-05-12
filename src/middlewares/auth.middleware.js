@@ -1,7 +1,7 @@
 import { Admin } from "../models/users/admin.model.js";
 import { Doctor } from "../models/users/doctor.model.js";
 import { Organization } from "../models/users/organization.model.js";
-import { Individual } from "../models/users/user.model.js";
+import { Individual } from "../models/users/individual.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
@@ -48,6 +48,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         const token =
             req.cookies?.accessToken ||
             req.header("Authorization")?.replace("Bearer ", "");
+        console.log(token !== null);
         if (!token) {
             throw new ApiError(401, "Unauthorized request !!!");
         }

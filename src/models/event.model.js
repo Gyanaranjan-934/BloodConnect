@@ -71,19 +71,45 @@ const eventSchema = new Schema(
         },
         paymentType: {
             type: String,
-            enum: ["cash", "giftCard","coupon"],
+            enum: ["cash", "giftCard", "coupon"],
         },
         paymentAmount: {
             type: Number,
         },
-        donorsRegisterd: {
+        donorsRegisteredBySelf: {
             type: [Schema.Types.ObjectId],
             ref: "Individual",
             default: [],
         },
+        donorsRegisteredByDoctor: {
+            type: [
+                {
+                    user: {
+                        type: Schema.Types.ObjectId,
+                        ref: "User",
+                    },
+                    doctor: {
+                        type: Schema.Types.ObjectId,
+                        ref: "Doctor",
+                    }
+                },
+            ],
+            _id: false,
+            default: [],
+        },
         donorsAttended: {
-            type: [Schema.Types.ObjectId],
-            ref: "Individual",
+            type: [{
+                donorId: {
+                    type: Schema.Types.ObjectId,
+                    ref: "Individual",
+                },
+                doctorId: {
+                    type: Schema.Types.ObjectId,
+                    ref: "Doctor",
+                },
+                bloodUnits: Number
+            }],
+            _id: false,
             default: [],
         },
         isVerified: {
