@@ -4,6 +4,7 @@ import { Individual } from "../../models/users/individual.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { logger } from "../../index.js";
 
 export const getAllEvents = asyncHandler(async (req, res) => {
     try {
@@ -30,8 +31,7 @@ export const getAllEvents = asyncHandler(async (req, res) => {
             )
         );
     } catch (error) {
-        console.log("Error in getting all events: ",error);
-        // Catch and handle errors
+        logger.error(`Error in getting all events: ${error}`);
         throw new ApiError(
             error?.statusCode || 500,
             error?.message || "Internal Server Error"
@@ -74,7 +74,7 @@ export const getEventDetails = asyncHandler(async (req, res) => {
                 model: "Doctor",
                 select: "_id avatar doctorId email name gender phone",
             });
-        
+
         // If event not found, throw error
         if (!event) {
             throw new ApiError(404, "Event not found");
@@ -89,15 +89,15 @@ export const getEventDetails = asyncHandler(async (req, res) => {
                     });
                 })
                 .map((donor) => donor.toObject());
-            event.toObject().donorsRegisteredBySelf = donorsRegisteredButNotAttended;
+            event.toObject().donorsRegisteredBySelf =
+                donorsRegisteredButNotAttended;
         }
         // Return success response with event details
         res.status(200).json(
             new ApiResponse(200, event, "Event details fetched successfully")
         );
     } catch (error) {
-        console.log("Error in getting event details: ",error);
-        // Catch and handle errors
+        logger.error(`Error in getting event details: ${error}`);
         throw new ApiError(
             error?.statusCode || 500,
             error?.message || "Internal Server Error"
@@ -110,7 +110,6 @@ export const deleteEvent = asyncHandler(async (req, res) => {
         const { eventId } = req.body;
         const organizationId = req.user?._id;
 
-        // Check if organization exists
         const organization = await Organization.findById(organizationId);
         if (!organization) {
             throw new ApiError(400, "This organization does not exist");
@@ -133,8 +132,7 @@ export const deleteEvent = asyncHandler(async (req, res) => {
             new ApiResponse(200, {}, "Event deleted successfully")
         );
     } catch (error) {
-        console.log("Error in deleting event: ",error);
-        // Catch and handle errors
+        logger.error(`Error in deleting event: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -190,7 +188,9 @@ export const getAllUpcomingEventsForIndividual = asyncHandler(
                     )
                 );
         } catch (error) {
-            console.log("Error in getting upcoming events for individual: ",error);
+            logger.error(
+                `Error in getting upcoming events for individual: ${error}`
+            );
             res.status(error?.statusCode || 500).json({
                 message: error?.message || "Internal Server Error",
             });
@@ -207,7 +207,7 @@ export const getAllEventsForOrganization = asyncHandler(async (req, res) => {
             .status(200)
             .json(new ApiResponse(200, events, "Events fetched successfully"));
     } catch (error) {
-        console.log("Error in getting all events for organization: ",error);
+        logger.error(`Error in getting all events for organization: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -218,29 +218,28 @@ export const getRegisteredEventsOfIndividual = asyncHandler(
     async (req, res) => {
         try {
             const registeredEvents = await Individual.findById(req.user._id)
-                .populate({
-                    path: "eventsRegistered eventsAttended",
-                    model: "Event",
-                })
-                .select("eventsRegistered eventsAttended");
+                .populate(
+                    "eventsRegistered",
+                    "_id eventName isPaid startDate endDate startTime endTime address location paymentType paymentAmount"
+                )
+                .populate("eventsRegistered.organizationId", "name cinNo")
+                .populate(
+                    "eventsAttended.eventId",
+                    "eventName isPaid startDate endDate startTime endTime address location paymentType paymentAmount"
+                )
+                .select("eventsRegistered eventsAttended")
+                .lean();
 
             let eventsData = [];
 
             if (registeredEvents) {
                 eventsData = registeredEvents.eventsRegistered.map((event) => {
-                    if (event.eventsAttended > 0) {
-                        if (event.eventsAttended.includes(event)) {
-                            event.isAttended = true;
-                        } else {
-                            event.isAttended = false;
-                        }
-                    }
+                    // Add isAttended field
+                    event.isAttended = registeredEvents.eventsAttended.some(
+                        (attendedEvent) => attendedEvent.eventId._id.equals(event._id)
+                    );
                     return event;
                 });
-
-                eventsData = eventsData.sort(
-                    (a, b) => a.startDate - b.startDate
-                );
             }
 
             return res
@@ -253,7 +252,9 @@ export const getRegisteredEventsOfIndividual = asyncHandler(
                     )
                 );
         } catch (error) {
-            console.log("Error in getting registered events for individual: ",error);
+            logger.error(
+                `Error in getting registered events for individual: ${error}`
+            );
             res.status(error?.statusCode || 500).json({
                 message: error?.message || "Internal Server Error",
             });
@@ -277,7 +278,7 @@ export const getEventsForDoctor = asyncHandler(async (req, res) => {
             .status(200)
             .json(new ApiResponse(200, events, "Events fetched successfully"));
     } catch (error) {
-        console.log("Error in getting events for doctor: ",error);
+        logger.error(`Error in getting events for doctor: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -308,7 +309,7 @@ export const getDonorsRegisteredByDoctor = asyncHandler(async (req, res) => {
                 )
             );
     } catch (error) {
-        console.log("Error in getting donors registered by doctor: ",error);
+        logger.error(`Error in getting donors registered by doctor: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -332,25 +333,24 @@ export const getDonorsAttendedByDoctor = asyncHandler(async (req, res) => {
                 select: "_id avatar doctorId email name gender phone",
             });
 
-        console.log("Event: ", event);
-
         // Filter donors attended by the current doctor
         const donorsAttended = event.donorsAttended.filter((donor) => {
             return donor.doctorId.equals(doctorId);
         });
 
-        return res.status(200).json(
-            new ApiResponse(
-                200,
-                donorsAttended,
-                "Donors attended fetched successfully"
-            )
-        );
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    donorsAttended,
+                    "Donors attended fetched successfully"
+                )
+            );
     } catch (error) {
-        console.log("Error in getting donors attended by doctor: ", error);
+        logger.error(`Error in getting donors attended by doctor: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
     }
 });
-

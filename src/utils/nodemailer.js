@@ -1,13 +1,13 @@
 import { createTransport } from "nodemailer";
+import { logger } from "../index.js";
 
-// Configure the transporter with your SMTP server details
 const transporter = createTransport({
-    host: "smtp-pulse.com", // Replace with your SMTP server hostname
-    port: 465, // Replace with your SMTP server port (common ports are 465 or 587)
-    secure: true, // Set to true if your server uses SSL
+    host: "smtp-pulse.com",
+    port: 465, 
+    secure: true,
     auth: {
         user: "gyanaranjansahoo509@gmail.com",
-        pass: "n4BPFQ6mZSD", // Replace with your SMTP password
+        pass: "n4BPFQ6mZSD",
     },
 });
 
@@ -22,9 +22,9 @@ export const sendEmail = (recipientEmail, emailSubject, emailText, bodyHTML) => 
 
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            console.log(error);
+            logger.error(`Error in sending email: ${error}`);
         } else {
-            console.log("Email sent: " + info.response);
+            logger.info(`Email sent: ${info.response}`);
         }
     });
 };

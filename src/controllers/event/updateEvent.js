@@ -2,6 +2,7 @@ import { Event } from "../../models/event.model";
 import { Organization } from "../../models/users/organization.model";
 import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
+import { logger } from "../../index.js";
 
 export const updateEvent = asyncHandler(async (req, res) => {
     try {
@@ -53,6 +54,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
         return res.status(201).json(new ApiResponse(201, eventUpdated, "Event updated successfully"));
 
     } catch (error) {
+        logger.error(`Error in updating event: ${error}`);
         res.status(error?.statusCode || 500).json({
             mesage: error?.message || "Internal Server Error"
         })

@@ -6,7 +6,6 @@ import {
     registerOrganization,
 } from "../controllers/auth/registerController.js";
 import {
-    loginAdmin,
     loginDoctor,
     loginIndividual,
     loginOrganization,
@@ -27,7 +26,6 @@ router.post("/organization/register", registerOrganization);
 router.post("/doctor/register", registerAsDoctor);
 router.route("/login/individual").post(loginIndividual);
 router.route("/login/organization").post(loginOrganization);
-router.route("/login/admin").post(loginAdmin);
 router.route("/login/doctor").post(loginDoctor);
 
 // protected routes

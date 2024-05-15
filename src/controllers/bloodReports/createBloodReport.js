@@ -4,6 +4,7 @@ import { Individual } from "../../models/users/individual.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { logger } from "../../index.js";
 
 export const createBloodReport = asyncHandler(async (req, res) => {
     try {
@@ -24,8 +25,6 @@ export const createBloodReport = asyncHandler(async (req, res) => {
         const donor = await Individual.findById(userId);
         
         const camp = await Event.findById(lastCamp);
-        
-        console.log(donor);
         
         if(donor && camp){
             const isAttendedBefore = donor.eventsAttended.some((attendedEvent) => {
@@ -75,7 +74,7 @@ export const createBloodReport = asyncHandler(async (req, res) => {
             )
         );
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in creating blood report: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });

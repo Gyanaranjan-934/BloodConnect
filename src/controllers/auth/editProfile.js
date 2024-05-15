@@ -3,6 +3,7 @@ import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Individual } from "../../models/users/individual.model.js";
 import { Organization } from "../../models/users/organization.model.js";
+import { logger } from "../../index.js";
 
 export const updateIndividualProfile = asyncHandler(async (req, res) => {
     try {
@@ -50,7 +51,7 @@ export const updateIndividualProfile = asyncHandler(async (req, res) => {
                 new ApiResponse(200, updatedUser, "User updated successfully")
             );
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in updating individual profile: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -92,7 +93,7 @@ export const updateOrganizationProfile = asyncHandler(async (req, res) => {
                 )
             );
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in updating organization profile: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });

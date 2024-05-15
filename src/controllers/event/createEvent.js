@@ -4,11 +4,12 @@ import { Organization } from "../../models/users/organization.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { logger } from "../../index.js";
 
 export const createEvent = asyncHandler(async (req, res) => {
     try {
-        console.log(req.body);
         const { eventDetails } = req.body;
+        
         const {
             eventName,
             eventHeadName,
@@ -27,8 +28,7 @@ export const createEvent = asyncHandler(async (req, res) => {
             address,
             location,
         } = JSON.parse(eventDetails);
-        console.log(JSON.parse(eventDetails));
-        // Validation: Check if required fields are filled
+        
         if (
             !eventName ||
             !eventHeadName ||
@@ -41,8 +41,7 @@ export const createEvent = asyncHandler(async (req, res) => {
             !availableStaffCount ||
             !availableBedCount ||
             !doctorsList ||
-            !address ||
-            !location
+            !address
         ) {
             throw new ApiError(400, "Please fill all the required details");
         }
@@ -55,10 +54,8 @@ export const createEvent = asyncHandler(async (req, res) => {
             .split("-")
             .map(Number);
 
-        // Parse the time string to extract hours and minutes
         const [startHours, startMinutes] = startTime.split(":").map(Number);
 
-        // Create a new Date object using the parsed components
         const startDateCoverted = new Date(
             startYear,
             startMonth - 1,
@@ -69,10 +66,8 @@ export const createEvent = asyncHandler(async (req, res) => {
 
         const [endYear, endMonth, endDay] = endDate.split("-").map(Number);
 
-        // Parse the time string to extract hours and minutes
         const [endHours, endMinutes] = endTime.split(":").map(Number);
 
-        // Create a new Date object using the parsed components
         const endDateCoverted = new Date(
             endYear,
             endMonth - 1,
@@ -81,7 +76,6 @@ export const createEvent = asyncHandler(async (req, res) => {
             endMinutes
         );
 
-        // Validation: Check if time and date of the event are provided
         if (new Date(startDate) > new Date(endDate)) {
             throw new ApiError(400, "Start date should be less than end date");
         }
@@ -99,13 +93,12 @@ export const createEvent = asyncHandler(async (req, res) => {
             );
         }
 
-        // Check for the organization ID
         const requestedOrganizationID = req.user?._id;
+
         const actualOrganization = await Organization.findById(
             requestedOrganizationID
         );
 
-        // If organization doesn't exist, throw error
         if (!actualOrganization) {
             throw new ApiError(400, "Organization does not exist");
         }
@@ -118,7 +111,6 @@ export const createEvent = asyncHandler(async (req, res) => {
             currentLocationCoord = location;
         }
 
-        // Create event
         const eventCreated = await Event.create({
             eventName,
             eventHeadName,
@@ -146,7 +138,6 @@ export const createEvent = asyncHandler(async (req, res) => {
             doctors: doctorsFromDB.map((doctor) => doctor._id),
         });
 
-        // If event creation failed, throw error
         if (!eventCreated) {
             throw new ApiError(
                 500,
@@ -154,7 +145,6 @@ export const createEvent = asyncHandler(async (req, res) => {
             );
         }
 
-        // Return success response
         return res
             .status(201)
             .json(
@@ -165,7 +155,7 @@ export const createEvent = asyncHandler(async (req, res) => {
                 )
             );
     } catch (error) {
-        // Catch and handle errors
+        logger.error(`Error in creating event: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });

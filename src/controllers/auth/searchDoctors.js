@@ -1,6 +1,7 @@
 import { Doctor } from "../../models/users/doctor.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { logger } from "../../index.js";
 
 export const searchDoctor = asyncHandler(async (req, res) => {
     try {
@@ -17,6 +18,7 @@ export const searchDoctor = asyncHandler(async (req, res) => {
             .status(200)
             .json(new ApiResponse(200, doctors, "Doctors found"));
     } catch (error) {
+        logger.error(`Error in searching doctors: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -30,6 +32,7 @@ export const getDoctors = asyncHandler(async (req, res) => {
             .status(200)
             .json(new ApiResponse(200, doctors, "Doctors found"));
     } catch (error) {
+        logger.error(`Error in getting doctors: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });

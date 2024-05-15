@@ -2,10 +2,11 @@ import { Individual } from "../../models/users/individual.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { logger } from "../../index.js";
 
 export const getBloodReports = asyncHandler(async (req, res) => {
     try {
-        const userId = req.query.userId;
+        const userId = req.user._id;
 
         const bloodReports = await Individual.findById(userId)
             .populate({
@@ -23,11 +24,12 @@ export const getBloodReports = asyncHandler(async (req, res) => {
             .json(
                 new ApiResponse(
                     200,
-                    bloodReports,
+                    bloodReports.bloodReports,
                     "Blood reports fetched successfully"
                 )
             );
     } catch (error) {
+        logger.error(`Error in getting blood reports: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });

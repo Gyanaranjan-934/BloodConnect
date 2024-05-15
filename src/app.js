@@ -7,6 +7,8 @@ import alertRouter from './routes/alert.routes.js'
 import doctorRouter from './routes/doctor.routes.js'
 import eventRouter from './routes/event.routes.js'
 import reportRouter from './routes/report.routes.js'
+import adminRouter from './routes/admin.routes.js'
+import appointmentRouter from './routes/appointment.routes.js'
 
 const app = express();
 
@@ -32,4 +34,6 @@ app.use('/api/v1/alert',alertRouter)
 app.use('/api/v1/doctor',doctorRouter)
 app.use('/api/v1/event',eventRouter)
 app.use('/api/v1/report',reportRouter)
+app.use('/api/v1/admin',adminRouter)
+app.use('/api/v1/appointment',appointmentRouter)
 export { app }

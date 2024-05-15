@@ -4,6 +4,11 @@ import jwt from "jsonwebtoken";
 
 const adminSchema = new Schema(
     {
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
         email: {
             type: String,
             required: true,
@@ -11,29 +16,13 @@ const adminSchema = new Schema(
             lowercase: true,
             trim: true,
         },
-        avatar:{
-            type: String,
-        },
-        currentLocation: {
-            type: {
-                type: {
-                    type: String,
-                    enum: ["Point"],
-                    required: true,
-                },
-                coordinates: {
-                    type: [Number],
-                    required: true,
-                },
-            },
-        },
         adminId:{
             type:String,
             unique: true,
             required: true,
             trim: true
         },
-        phoneNo: {
+        phone: {
             type: String,
             required: true,
             unique: true,
@@ -53,8 +42,6 @@ const adminSchema = new Schema(
     }
 );
 
-adminSchema.index({ currentLocation: "2dsphere" });
-
 adminSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
@@ -70,8 +57,7 @@ adminSchema.methods.generateAccessToken = function () {
         {
             _id: this._id,
             email: this.email,
-            organizationName: this.organizationName,
-            cinNo: this.cinNo,
+            adminId: this.adminId,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {

@@ -1,8 +1,8 @@
-import { Event } from "../../models/event.model";
 import { Individual } from "../../models/users/individual.model";
 import { ApiError } from "../../utils/ApiError";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { asyncHandler } from "../../utils/asyncHandler";
+import { logger } from "../../index.js";
 
 export const searchUser = asyncHandler(async (req, res) => {
     try {
@@ -27,6 +27,7 @@ export const searchUser = asyncHandler(async (req, res) => {
 
         return res.status(201).json(new ApiResponse(201,user,"User fetched successfully"));
     } catch (error) {
+        logger.error(`Error in searching user: ${error}`);
         res.status(error?.statusCode || 500).json({
             success: false,
             message: error?.message || "Internal Server Error"

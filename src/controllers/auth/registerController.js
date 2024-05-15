@@ -4,6 +4,7 @@ import { Individual } from "../../models/users/individual.model.js";
 import { Organization } from "../../models/users/organization.model.js";
 import { Doctor } from "../../models/users/doctor.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
+import { logger } from "../../index.js";
 
 const validatePhoneNumber = (phoneNo) => /^\d{10}$/.test(phoneNo);
 const validateCIN = (cinNo) =>
@@ -11,7 +12,6 @@ const validateCIN = (cinNo) =>
 
 const registerIndividual = asyncHandler(async (req, res) => {
     try {
-        console.log(req.body);
         const { name, email, password, bloodGroup, currentLocation } = req.body;
 
         if (![name, email, password, bloodGroup].every(Boolean)) {
@@ -45,7 +45,7 @@ const registerIndividual = asyncHandler(async (req, res) => {
             new ApiResponse(201, user, "Individual created successfully")
         );
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in registering individual: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -66,7 +66,6 @@ const registerOrganization = asyncHandler(async (req, res) => {
             cinNo,
             currentLocation,
         } = req.body;
-        console.log(req.body);
 
         if (
             !name ||
@@ -131,7 +130,7 @@ const registerOrganization = asyncHandler(async (req, res) => {
             new ApiResponse(201, user, "Organization created successfully")
         );
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in registering organization: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -172,7 +171,7 @@ const registerAsDoctor = asyncHandler(async (req, res) => {
             new ApiResponse(201, user, "User created successfully")
         );
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in registering doctor: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });

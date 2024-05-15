@@ -1,4 +1,5 @@
 import { createClient } from "redis";
+import { logger } from "../index.js";
 
 export const rediesClient = createClient({
     // password: "nprrGF8u4lgWFaPMCZzuhZSFHupLkaxx",
@@ -10,8 +11,8 @@ export const rediesClient = createClient({
     port: 6379, 
 });
 
-rediesClient.on("error", (err) => console.log("Redis Client Error", err));
+rediesClient.on("error", (err) => logger.error("Redis Client Error", err));
 
 export async function getRedisClient() {
-    await rediesClient.connect().then(() => console.log("Redis Client Connected"));
+    await rediesClient.connect().then(() => logger.info("Redis Client Connected"));
 }

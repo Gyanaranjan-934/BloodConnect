@@ -1,4 +1,3 @@
-import { Admin } from "../../models/users/admin.model.js";
 import { Doctor } from "../../models/users/doctor.model.js";
 import { Organization } from "../../models/users/organization.model.js";
 import { Individual } from "../../models/users/individual.model.js";
@@ -11,10 +10,12 @@ const generateAccessAndRefreshToken = async (userId, userType, location) => {
             user = await Individual.findOne({ _id: userId });
         } else if (userType === "organization") {
             user = await Organization.findOne({ _id: userId });
-        } else if (userType === "admin") {
-            user = await Admin.findOne({ _id: userId });
         } else {
             user = await Doctor.findOne({ _id: userId });
+        }
+
+        if(!user){
+            throw new ApiError(401, "Invalid user");
         }
 
         const accessToken = user.generateAccessToken();

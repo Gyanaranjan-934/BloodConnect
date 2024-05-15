@@ -5,6 +5,7 @@ import { Individual } from "../models/users/individual.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
+import { logger } from "../index.js";
 
 const getUserByToken = async (token, userType) => {
     try {
@@ -33,7 +34,7 @@ const getUserByToken = async (token, userType) => {
 
         return user;
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in getting user by token: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
             data: null,
@@ -48,7 +49,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         const token =
             req.cookies?.accessToken ||
             req.header("Authorization")?.replace("Bearer ", "");
-        console.log(token !== null);
+        logger.info(`Token is valid: ${token !== null}`);
         if (!token) {
             throw new ApiError(401, "Unauthorized request !!!");
         }
@@ -61,7 +62,45 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in verifying JWT: ${error}`);
+        res.status(error?.statusCode || 500).json({
+            message: error?.message || "Internal Server Error",
+            data: null,
+            success: false,
+            errors: error?.errors || [],
+        });
+    }
+});
+
+export const verifyAdmin = asyncHandler(async (req, res, next) => {
+    try {
+        const token =
+            req.cookies?.accessToken ||
+            req.header("Authorization")?.replace("Bearer ", "");
+
+        const isAdmin = req.header("userType") === "admin";
+
+        if (!token || !isAdmin) {
+            throw new ApiError(401, "Unauthorized request !!!");
+        }
+        const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        if(!decodedToken){
+            throw new ApiError(401, "Invalid access token !!!");
+        }
+        const user = await Admin.findById(decodedToken?._id).select(
+            "-password -refreshToken"
+        );
+        if (!user) {
+            throw new ApiError(401, "Invalid access token !!!");
+        }
+
+        req.userType = "admin";
+        
+        req.user = user;
+        
+        next();
+    } catch (error) {
+        logger.error(`Error in verifying admin JWT: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
             data: null,

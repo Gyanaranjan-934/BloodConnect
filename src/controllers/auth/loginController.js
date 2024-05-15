@@ -1,4 +1,3 @@
-import { Admin } from "../../models/users/admin.model.js";
 import { Doctor } from "../../models/users/doctor.model.js";
 import { Organization } from "../../models/users/organization.model.js";
 import { Individual } from "../../models/users/individual.model.js";
@@ -6,6 +5,7 @@ import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import generateAccessAndRefreshToken from "./generateAccessAndRefreshToken.js";
+import { logger } from "../../index.js";
 
 const loginUser = async (
     UserModel,
@@ -83,7 +83,7 @@ export const loginIndividual = asyncHandler(async (req, res) => {
             res
         );
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in logging in individual: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -102,33 +102,19 @@ export const loginOrganization = asyncHandler(async (req, res) => {
             res
         );
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in logging in organization: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
     }
 });
-
-export const loginAdmin = asyncHandler(async (req, res) => {
-    try {
-        const { email, password, location } = req.body;
-        const identifier = email;
-        await loginUser(Admin, identifier, password, location, "admin", res);
-    } catch (error) {
-        console.log(error);
-        res.status(error?.statusCode || 500).json({
-            message: error?.message || "Internal Server Error",
-        });
-    }
-});
-
 export const loginDoctor = asyncHandler(async (req, res) => {
     try {
         const { email, password, location } = req.body;
         const identifier = email;
         await loginUser(Doctor, identifier, password, location, "doctor", res);
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in logging in doctor: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });

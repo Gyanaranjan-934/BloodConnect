@@ -4,6 +4,7 @@ import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { sendEmail } from "../../utils/nodemailer.js";
+import { logger } from "../../index.js";
 
 export const updateAlert = asyncHandler(async (req, res) => {
     try {
@@ -32,7 +33,7 @@ export const updateAlert = asyncHandler(async (req, res) => {
         const currentLocation = JSON.parse(currentLocationCoord);
         const longitude = currentLocation.longitude;
         const latitude = currentLocation.latitude;
-        console.log(longitude, latitude);
+        
         // Find nearby users within 10 kilometers
         const nearbyUsers = await Individual.aggregate([
             {
@@ -102,7 +103,7 @@ export const updateAlert = asyncHandler(async (req, res) => {
             .status(200)
             .json(new ApiResponse(200, updateAlert, "Alert updated successfully"));
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in updating alert: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -117,11 +118,11 @@ export const respondAlert = asyncHandler(async (req, res) => {
         if (!alert) {
             throw new ApiError(404, "Alert does not exist");
         }
-        console.log(receiptantId);
-        console.log(alert.recipients);
+        
         const recipient = alert.recipients.find(
             (r) => r.recipientId.equals(receiptantId)
         );
+        
         if (!recipient) {
             throw new ApiError(404, "You are not the recipient of the alert");
         }
@@ -141,7 +142,7 @@ export const respondAlert = asyncHandler(async (req, res) => {
                 new ApiResponse(200, {}, "You have responded to the alert")
             );
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in responding alert: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -222,7 +223,7 @@ export const updateAlertReceiptantBySender = asyncHandler(async (req, res) => {
 
         return;
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in sending alert to recipients: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });

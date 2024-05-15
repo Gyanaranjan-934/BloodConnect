@@ -105,6 +105,11 @@ const indivdualUserSchema = new Schema(
             ref: "Event",
             default: [],
         },
+        appointments: {
+            type: [Schema.Types.ObjectId],
+            ref: "Appointment",
+            default: [],
+        },
         eventsAttended: {
             type: [
                 {

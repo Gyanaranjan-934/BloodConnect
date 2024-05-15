@@ -42,6 +42,11 @@ const organizationSchema = new Schema(
             _id: false,
             required: true,
         },
+        appointments: {
+            type: [Schema.Types.ObjectId],
+            ref: "Appointment",
+            default: [],
+        },
         events:{
             type: [Schema.Types.ObjectId],
             ref: "Event",

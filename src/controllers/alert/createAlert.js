@@ -5,6 +5,8 @@ import { Individual } from "../../models/users/individual.model.js";
 import { uploadOnCloudinary } from "../../utils/cloudinary.js";
 import { rediesClient } from "../../utils/redies.js";
 import { sendEmail } from "../../utils/nodemailer.js";
+import { logger } from "../../index.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 /*
     Create an alert for a patient:
@@ -19,7 +21,6 @@ import { sendEmail } from "../../utils/nodemailer.js";
 export const createAlert = asyncHandler(async (req, res) => {
     try {
         const userId = req.user?._id;
-        console.log(String(userId));
         const userType = req.userType;
         const {
             patientName,
@@ -34,12 +35,10 @@ export const createAlert = asyncHandler(async (req, res) => {
             noOfDonorsToSend,
         } = req.body;
 
-        console.log(req.body);
-
         const currentLocation = JSON.parse(currentLocationCoord);
         const longitude = currentLocation.longitude;
         const latitude = currentLocation.latitude;
-        console.log(longitude, latitude);
+
         let nearbyUsers = await Individual.find({
             currentLocation: {
                 $near: {
@@ -53,18 +52,15 @@ export const createAlert = asyncHandler(async (req, res) => {
                     $maxDistance: 200000,
                 },
             },
-        }).limit(parseInt(noOfDonorsToSend))
+        })
+            .limit(parseInt(noOfDonorsToSend))
             .select(
                 "-password -refreshToken -bloodReports -__v -eventsAttended -eventsRegistered -receivedAlerts"
             );
 
-        console.log(nearbyUsers);
-
         nearbyUsers = nearbyUsers.filter(
             (user) => user.bloodGroup === bloodGroup
         );
-
-        console.log(nearbyUsers);
 
         // send the response to the client and cache the alert details in redis
 
@@ -98,7 +94,7 @@ export const createAlert = asyncHandler(async (req, res) => {
             .status(201)
             .json(new ApiResponse(201, nearbyUsers, "Nearby users found"));
     } catch (error) {
-        console.error(error); // Log the full error for debugging
+        logger.error(`Error in shadow creating alert: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
@@ -115,9 +111,13 @@ export const getDonorListAndCreateAlert = asyncHandler(async (req, res) => {
 
         if (alertDetails) {
             await rediesClient.unlink(String(userId));
+        } else {
+            throw new ApiError(
+                400,
+                "The time limit has been expired, sorry for the inconvenience. Please try again after some time..."
+            );
         }
         alertDetails = JSON.parse(alertDetails);
-        console.log(alertDetails.address);
 
         if (donorList) {
             const [year, month, day] = alertDetails.dateOfRequirement
@@ -136,9 +136,6 @@ export const getDonorListAndCreateAlert = asyncHandler(async (req, res) => {
             );
             const longitude = currentLocation.longitude;
             const latitude = currentLocation.latitude;
-            donorList.map((donor) => {
-                console.log(donor);
-            });
             // Create an alert document
             const alert = await Alert.create({
                 senderId: userId,
@@ -204,7 +201,7 @@ export const getDonorListAndCreateAlert = asyncHandler(async (req, res) => {
             return res.status(400).json({ message: "No donors selected" });
         }
     } catch (error) {
-        console.log(error);
+        logger.error(`Error in creating alert: ${error}`);
         res.status(error?.statusCode || 500).json({
             message: error?.message || "Internal Server Error",
         });
