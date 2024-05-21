@@ -91,7 +91,8 @@ const eventSchema = new Schema(
                     doctor: {
                         type: Schema.Types.ObjectId,
                         ref: "Doctor",
-                    }
+                    },
+                    timeOfRegistration: Date,
                 },
             ],
             _id: false,
@@ -107,6 +108,7 @@ const eventSchema = new Schema(
                     type: Schema.Types.ObjectId,
                     ref: "Doctor",
                 },
+                dateOfDonation: Date,
                 bloodUnits: Number
             }],
             _id: false,

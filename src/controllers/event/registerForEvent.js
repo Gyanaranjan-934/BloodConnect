@@ -85,7 +85,11 @@ export const registerByDoctor = asyncHandler(async (req, res) => {
             bloodGroup: bloodGroup ? bloodGroup : "",
             eventId: event._id,
         });
-        event.donorsRegisteredByDoctor.push(user._id);
+        event.donorsRegisteredByDoctor.push({
+            user: user._id,
+            doctor: doctorId,
+            timeOfRegistration: new Date(),
+        });
         await event.save();
 
         return res

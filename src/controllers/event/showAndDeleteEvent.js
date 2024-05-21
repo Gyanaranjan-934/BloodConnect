@@ -202,7 +202,7 @@ export const getAllEventsForOrganization = asyncHandler(async (req, res) => {
     try {
         const events = await Event.find({
             organizationId: req.user._id,
-        }).sort({ dateOfEvent: -1 });
+        }).populate("doctors").sort({ dateOfEvent: -1 });
         return res
             .status(200)
             .json(new ApiResponse(200, events, "Events fetched successfully"));

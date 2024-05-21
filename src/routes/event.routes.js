@@ -13,10 +13,12 @@ import {
     getEventsForDoctor,
     getRegisteredEventsOfIndividual,
 } from "../controllers/event/showAndDeleteEvent.js";
+import { updateEvent } from "../controllers/event/updateEvent.js";
 
 const router = Router();
 
 router.route("/create").post(verifyJWT, createEvent);
+router.route("/update-event").put(verifyJWT, updateEvent);
 router.route("/register-by-doctor").post(verifyJWT, registerByDoctor);
 router.route("/register-by-self").post(verifyJWT, registerBySelf);
 router

@@ -1,57 +1,153 @@
-import { Event } from "../../models/event.model";
-import { Organization } from "../../models/users/organization.model";
-import { ApiError } from "../../utils/ApiError";
-import { asyncHandler } from "../../utils/asyncHandler";
+import { Event } from "../../models/event.model.js";
+import { Organization } from "../../models/users/organization.model.js";
+import { ApiError } from "../../utils/ApiError.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 import { logger } from "../../index.js";
+import { ApiResponse } from "../../utils/ApiResponse.js";
 
 export const updateEvent = asyncHandler(async (req, res) => {
     try {
-        const { name, doctors, staffCount, bedCount, maxCapacity, time, date, isPaid } =
-            req.body;
+        const { eventDetails } = req.body;
+        
+        const {
+            eventName,
+            eventHeadName,
+            startDate,
+            endDate,
+            startTime,
+            endTime,
+            isPaid,
+            paymentType,
+            paymentAmount,
+            targetTotalBlood,
+            maxDonorCapacity,
+            availableStaffCount,
+            availableBedCount,
+            doctorsList,
+            address,
+            location,
+            eventId,
+        } = JSON.parse(eventDetails);
+
         if (
-            [name, doctors, staffCount, bedCount, maxCapacity].some(
-                (item) =>
-                    typeof item === "string"
-                        ? item?.trim() === ""
-                        : typeof item === "number"
-                          ? item > 0
-                          : false
-            )
+            !eventId ||
+            !eventName ||
+            !eventHeadName ||
+            !startDate ||
+            !endDate ||
+            !startTime ||
+            !endTime ||
+            !targetTotalBlood ||
+            !maxDonorCapacity ||
+            !availableStaffCount ||
+            !availableBedCount ||
+            !doctorsList ||
+            !address
         ) {
             throw new ApiError(400, "Please fill all the required details");
         }
 
-        if(!time || !date){
-            throw new ApiError(400, "Time and date of the event is required");
+        const event = await Event.findById(eventId);
+        if (!event) {
+            throw new ApiError(404, "Event not found");
         }
 
-        // check for the organization ID
+        if (isPaid) {
+            if (paymentType === "cash" && !paymentAmount) {
+                throw new ApiError(400, "Payment type and amount are required");
+            }
+        }
+        const [startYear, startMonth, startDay] = startDate
+            .split("-")
+            .map(Number);
+
+        const [startHours, startMinutes] = startTime.split(":").map(Number);
+
+        const startDateCoverted = new Date(
+            startYear,
+            startMonth - 1,
+            startDay,
+            startHours,
+            startMinutes
+        );
+
+        const [endYear, endMonth, endDay] = endDate.split("-").map(Number);
+
+        const [endHours, endMinutes] = endTime.split(":").map(Number);
+
+        const endDateCoverted = new Date(
+            endYear,
+            endMonth - 1,
+            endDay,
+            endHours,
+            endMinutes
+        );
+
+        if (new Date(startDate) > new Date(endDate)) {
+            throw new ApiError(400, "Start date should be less than end date");
+        }
+
+        if (new Date(startTime) > new Date(endTime)) {
+            throw new ApiError(400, "Start time should be less than end time");
+        }
+
+        const doctorsFromDB = await Doctor.find({ _id: { $in: doctorsList } });
+
+        if (doctorsFromDB.length !== doctorsList.length) {
+            throw new ApiError(
+                400,
+                "Some of the doctors are not are not in the application"
+            );
+        }
 
         const requestedOrganizationID = req.user?._id;
 
-        const actualOrganization = Organization.findById(requestedOrganizationID);
+        const actualOrganization = await Organization.findById(
+            requestedOrganizationID
+        );
 
-        if(!actualOrganization){
-            throw new ApiError(400,"Organization does not exist");
+        if (!actualOrganization) {
+            throw new ApiError(400, "Organization does not exist");
         }
 
-        const eventUpdated = await Event.findByIdAndDelete(requestedOrganizationID,{
-            name,
-            organizationId:requestedOrganizationID,
-            doctors,
-            staffCount,
-            bedCount,
-            maxCapacity,
+        let currentLocationCoord = {
+            latitude: 0.0,
+            longitude: 0.0,
+        };
+        if (location) {
+            currentLocationCoord = location;
+        }
+
+        const eventUpdated = await Event.findByIdAndUpdate(eventId, {
+            eventName,
+            eventHeadName,
+            startDate: startDateCoverted,
+            endDate: endDateCoverted,
+            startTime,
+            endTime,
+            targetTotalBlood,
+            availableStaffCount,
+            availableBedCount,
+            address,
+            location,
+            paymentType,
+            maxDonorCapacity,
+            paymentAmount,
+            location: {
+                type: "Point",
+                coordinates: [
+                    parseFloat(String(currentLocationCoord.longitude)),
+                    parseFloat(String(currentLocationCoord.latitude)),
+                ],
+            },
             isPaid,
-            dateOfEvent:date,
-            timeOfEvent: time
+            organizationId: actualOrganization._id,
+            doctors: doctorsFromDB.map((doctor) => doctor._id),
         })
 
-        if(!eventUpdated){
-            throw new ApiError(500,"Error in updating new event. Please try again after some time...")
-        }
-
-        return res.status(201).json(new ApiResponse(201, eventUpdated, "Event updated successfully"));
+        return res
+            .status(200)
+            .json(new ApiResponse(200, eventUpdated, "Event updated successfully"));
 
     } catch (error) {
         logger.error(`Error in updating event: ${error}`);

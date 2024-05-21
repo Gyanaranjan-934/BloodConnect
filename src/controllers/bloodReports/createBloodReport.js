@@ -62,6 +62,7 @@ export const createBloodReport = asyncHandler(async (req, res) => {
         camp.donorsAttended.push({
             donorId: donor._id,
             doctorId,
+            dateOfDonation: new Date(),
             bloodUnits
         });
         await camp.save();
