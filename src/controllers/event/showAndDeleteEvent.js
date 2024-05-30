@@ -60,9 +60,9 @@ export const getEventDetails = asyncHandler(async (req, res) => {
                 select: "_id avatar bloodGroup bloodReports adhaarNo dateOfBirth email name phone",
             })
             .populate({
-                path: "donorsRegisteredByDoctor",
-                model: "Individual",
-                select: "_id avatar bloodGroup bloodReports dateOfBirth email name phone",
+                path: "donorsRegisteredByDoctor.user",
+                model: "User",
+                select: "_id name email phone bloodGroup",
             })
             .populate({
                 path: "donorsAttended.donorId",
